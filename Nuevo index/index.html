@@ -230,7 +230,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <input type="email" id="auth-email" placeholder="tu@email.com" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;margin-bottom:.5rem">
     <button type="button" class="btn" id="btn-email">Enviar link de acceso</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.74</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.74d</div>
   </div>
 </div>
 
@@ -258,6 +258,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
         <div class="form-group"><label>Tu sueldo este mes (CLP)</label><div class="input-row"><span>$</span><input type="number" id="ob-sueldo-u" placeholder="0" min="0"></div></div>
         <button type="button" class="btn" style="background:#43c6ac" id="btn-unirse-hogar">Unirme al hogar</button>
         <div id="ob-msg" class="msg-error"></div>
+      <div id="diag-msg" style="margin-top:.8rem;font-size:.65rem;color:#9ca3af;font-family:monospace;white-space:pre-wrap;word-break:break-all;background:#f3f4f6;padding:.5rem;border-radius:8px;display:block"></div>
       </div>
     </div>
   </div>
@@ -403,7 +404,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.74</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.74d</span></footer>
 </div>
 
 <!-- MODAL CAMBIO DE MES AUTOMÁTICO -->
@@ -1543,7 +1544,16 @@ async function cargarDatos(){
   var timeout=setTimeout(function(){_cargando=false;hideLoading();showScreen(A.user?'onboard':'auth');},8000);
   var rm=await sb.from('miembros').select('*').eq('user_id',A.user.id);
   clearTimeout(timeout);
-  if(rm.error||!rm.data||rm.data.length===0){_cargando=false;hideLoading();showScreen('onboard');return;}
+  if(rm.error||!rm.data||rm.data.length===0){
+    _cargando=false;hideLoading();
+    // Mostrar diagnóstico en pantalla onboard
+    var diagMsg='UID: '+(A.user?A.user.id:'none')+'\nEmail: '+(A.user?A.user.email:'none')+'\nError: '+(rm.error?rm.error.message:'sin registros en miembros');
+    console.error('cargarDatos falló:',diagMsg);
+    // Mostrar mensaje visible en la pantalla
+    var diagEl=document.getElementById('diag-msg');
+    if(diagEl)diagEl.textContent=diagMsg;
+    showScreen('onboard');return;
+  }
   A.miembro=rm.data[0];var hid=A.miembro.hogar_id;
   // Aplicar configuración de mes según preferencia del usuario
   A.viewMes=calcViewMesInicial(A.miembro.cambio_mes||'dia1');
