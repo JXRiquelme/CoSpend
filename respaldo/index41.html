@@ -239,7 +239,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <div style="font-size:.72rem;color:#9ca3af;margin-bottom:.6rem;text-align:left">Si tienes contraseña configurada, escríbela para entrar. Si no, deja el campo vacío y te enviamos un link.</div>
     <button type="button" class="btn" id="btn-email">Entrar con email</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.80</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.78</div>
   </div>
 </div>
 
@@ -412,7 +412,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.80</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.78</span></footer>
 </div>
 
 <!-- MODAL GASTO -->
@@ -493,7 +493,6 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     </div>
     <div class="form-group"><div class="toggle-row"><div><div style="font-weight:700;font-size:.85rem">📌 Reembolso fijo</div><div style="font-size:.72rem;color:#9ca3af">Se proyectará en meses futuros</div></div><label class="switch"><input type="checkbox" id="mr-fijo"><span class="slider"></span></label></div></div>
     <div id="mr-fijo-info" style="display:none;font-size:.72rem;background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:.6rem .8rem;color:#5b21b6;line-height:1.45;margin-top:-.4rem">📋 Este reembolso se proyectará automáticamente en los meses futuros de la proyección. <span id="mr-fijo-info-extra"></span></div>
-    <div class="form-group" style="margin-top:.5rem"><div class="toggle-row"><div><div style="font-weight:700;font-size:.85rem">✅ Ya lo recibí</div><div style="font-size:.72rem;color:#9ca3af">Si está activo, se suma al ingreso del mes. Si no, queda como borrador.</div></div><label class="toggle"><input type="checkbox" id="mr-recibido" checked><span class="toggle-sl"></span></label></div></div>
     <div class="modal-footer"><button type="button" class="btn-cancel" onclick="closeModal('modal-reimb')">Cancelar</button><button type="button" class="btn-save teal" id="btn-save-reimb">Guardar</button></div>
   </div>
 </div>
@@ -784,13 +783,13 @@ function cuotaNum(g,mes){if(g.fijo||g.cuotas<=1)return null;var d=diffMeses(g.me
 function esPagado(g,mes){return A.pagos.some(function(p){return p.gasto_id===g.id&&p.mes===mes&&p.pagado;});}
 function sueldoMiembro(m,mes){var rows=A.sueldos.filter(function(s){return s.miembro_id===m.id&&s.mes<=mes;});rows.sort(function(a,b){return a.mes>b.mes?-1:1;});return rows.length?rows[0].monto:0;}
 function totalSueldosMes(mes){return A.miembros.reduce(function(t,m){return t+sueldoMiembro(m,mes);},0);}
-function totalReembsMes(mes){return A.reembolsos.filter(function(r){return r.mes===mes&&r.recibido!==false;}).reduce(function(t,r){return t+r.monto;},0);}
+function totalReembsMes(mes){return A.reembolsos.filter(function(r){return r.mes===mes;}).reduce(function(t,r){return t+r.monto;},0);}
 // Versión para proyección: incluye reembolsos fijos proyectados (Option A: respeta vigencia del gasto vinculado)
 function totalReembsProyMes(mes){
-  var directos=A.reembolsos.filter(function(r){return r.mes===mes&&r.recibido!==false;}).reduce(function(t,r){return t+r.monto;},0);
+  var directos=A.reembolsos.filter(function(r){return r.mes===mes;}).reduce(function(t,r){return t+r.monto;},0);
   // Solo proyectar en meses futuros al mes activo del usuario
   if(mes<=A.viewMes)return directos;
-  var fijos=A.reembolsos.filter(function(r){return r.fijo&&r.recibido!==false;});
+  var fijos=A.reembolsos.filter(function(r){return r.fijo;});
   if(!fijos.length)return directos;
   var mesesConFijos=[...new Set(fijos.map(function(r){return r.mes;}))].sort();
   var ultimoMes=mesesConFijos[mesesConFijos.length-1];
@@ -798,7 +797,7 @@ function totalReembsProyMes(mes){
   fijos.filter(function(r){return r.mes===ultimoMes;}).forEach(function(r){
     if(r.gasto_id){
       var gasto=A.gastos.find(function(g){return g.id===r.gasto_id;});
-      if(!gasto||!gastoEnMes(gasto,mes))return;
+      if(!gasto||!gastoEnMes(gasto,mes))return; // Option A: gasto ya no activo en ese mes
     }
     totalFijos+=r.monto;
   });
@@ -917,7 +916,7 @@ function renderGastos(mes){
       var tarj=x.tarjeta_id?A.tarjetas.find(function(t){return t.id===x.tarjeta_id;}):null;
       var montoReal=montoGastoEnMes(x,mes);
       var tieneVar=montoReal!==x.monto;
-      html+='<div class="row" style="background:'+(pagado?'#f0fdf4':'#fefce8')+';border-left:3px solid '+(pagado?'#22c55e':'#f59e0b')+'"><div class="row-icon" style="background:'+grp.color+'22">'+emojiFor(x.nombre)+'</div><div class="row-info"><div class="row-name">'+x.nombre+'</div>'+(x.notas?'<div class="row-sub">'+x.notas+'</div>':'')+'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px"><span class="badge '+(pagado?'badge-paid':'badge-pend')+'">'+(pagado?'✓ pagado':'⏳ pendiente')+'</span>'+(cn?'<span class="badge badge-cuota">'+cn+'/'+x.cuotas+'</span>':'')+(x.fijo?'<span class="badge badge-fixed">fijo</span>':'')+(tieneVar?'<span class="badge" style="background:#fef3c7;color:#92400e">⚡ variación</span>':'')+(tarj?'<span class="tarjeta-chip" style="background:'+tarj.color+'">💳 '+tarj.banco+'</span>':'')+'</div></div><div class="row-right">'+(montoReal>0?'<div class="row-amount"'+(tieneVar?' style="color:#f59e0b"':'')+'>'+fmt(montoReal)+'</div>':'<div style="font-size:.72rem;color:#9ca3af">—</div>')+(tieneVar?'<div style="font-size:.68rem;color:#9ca3af;text-decoration:line-through">'+fmt(x.monto)+'</div>':'')+(reimb>0?'<div style="font-size:.72rem;color:#5b21b6;font-weight:700">Neto: '+fmt(Math.max(0,montoReal-reimb))+'</div>':'')+'<div style="display:flex;gap:2px"><button type="button" class="ibtn ok" data-action="togglePago" data-id="'+x.id+'" data-mes="'+mes+'">✓</button><button type="button" class="ibtn edit" data-action="editGasto" data-id="'+x.id+'">✎</button>'+(x.fijo||x.cuotas>1?'<button type="button" class="ibtn edit" data-action="varGasto" data-id="'+x.id+'" title="Registrar variación de monto">⚡</button>':'')+'<button type="button" class="ibtn edit" data-action="moveGasto" data-id="'+x.id+'" title="Cambiar mes">📅</button><button type="button"class="ibtn" data-action="delGasto" data-id="'+x.id+'">✕</button></div></div></div>';
+      html+='<div class="row"><div class="row-icon" style="background:'+grp.color+'22">'+emojiFor(x.nombre)+'</div><div class="row-info"><div class="row-name">'+x.nombre+'</div>'+(x.notas?'<div class="row-sub">'+x.notas+'</div>':'')+'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px"><span class="badge '+(pagado?'badge-paid':'badge-pend')+'">'+(pagado?'✓ pagado':'⏳ pendiente')+'</span>'+(cn?'<span class="badge badge-cuota">'+cn+'/'+x.cuotas+'</span>':'')+(x.fijo?'<span class="badge badge-fixed">fijo</span>':'')+(tieneVar?'<span class="badge" style="background:#fef3c7;color:#92400e">⚡ variación</span>':'')+(tarj?'<span class="tarjeta-chip" style="background:'+tarj.color+'">💳 '+tarj.banco+'</span>':'')+'</div></div><div class="row-right">'+(montoReal>0?'<div class="row-amount"'+(tieneVar?' style="color:#f59e0b"':'')+'>'+fmt(montoReal)+'</div>':'<div style="font-size:.72rem;color:#9ca3af">—</div>')+(tieneVar?'<div style="font-size:.68rem;color:#9ca3af;text-decoration:line-through">'+fmt(x.monto)+'</div>':'')+(reimb>0?'<div style="font-size:.72rem;color:#5b21b6;font-weight:700">Neto: '+fmt(Math.max(0,montoReal-reimb))+'</div>':'')+'<div style="display:flex;gap:2px"><button type="button" class="ibtn ok" data-action="togglePago" data-id="'+x.id+'" data-mes="'+mes+'">✓</button><button type="button" class="ibtn edit" data-action="editGasto" data-id="'+x.id+'">✎</button>'+(x.fijo||x.cuotas>1?'<button type="button" class="ibtn edit" data-action="varGasto" data-id="'+x.id+'" title="Registrar variación de monto">⚡</button>':'')+'<button type="button" class="ibtn edit" data-action="moveGasto" data-id="'+x.id+'" title="Cambiar mes">📅</button><button type="button"class="ibtn" data-action="delGasto" data-id="'+x.id+'">✕</button></div></div></div>';
     });
   });
   var ctrlG='<div class="list-controls"><input type="text" class="list-ctrl-input" id="g-search" placeholder="🔍 Buscar..." value="'+(_gSearch||'').replace(/"/g,'&quot;')+'"><select class="list-ctrl-select" id="g-sort"><option value="default"'+(_gSort==='default'?' selected':'')+'>📅 Por defecto</option><option value="monto-desc"'+(_gSort==='monto-desc'?' selected':'')+'>💰 Mayor monto</option><option value="monto-asc"'+(_gSort==='monto-asc'?' selected':'')+'>💰 Menor monto</option><option value="nombre-asc"'+(_gSort==='nombre-asc'?' selected':'')+'>🔤 Nombre</option></select><select class="list-ctrl-select" id="g-size"><option value="10"'+(_gSize===10?' selected':'')+'>10 filas</option><option value="20"'+(_gSize===20?' selected':'')+'>20 filas</option><option value="0"'+(_gSize===0?' selected':'')+'>Todas</option></select></div>';
@@ -1025,22 +1024,8 @@ function renderIngresos(mes){
   otros.forEach(function(o){var esP=o.destino==='personal';ohtml+='<div class="row"><div class="row-icon" style="background:'+(esP?'#ede9fe':'#dcfce7')+'">'+(esP?'🔐':'💰')+'</div><div class="row-info"><div class="row-name">'+o.concepto+'</div><div class="row-sub">'+(esP?'Solo para mí':'Flujo hogar')+'</div></div><div class="row-right"><div class="row-amount" style="color:'+(esP?'#7c3aed':'#15803d')+'">'+fmt(o.monto)+'</div><button type="button" class="ibtn" data-action="delOtroIngreso" data-id="'+o.id+'">✕</button></div></div>';});
   el('i-otros-ingresos').innerHTML=ohtml;
   var rs=A.reembolsos.filter(function(r){return r.mes===mes;}),rhtml='';
-  var rsRecibidos=rs.filter(function(r){return r.recibido!==false;});
-  var rsBorradores=rs.filter(function(r){return r.recibido===false;});
   if(!rs.length)rhtml='<div style="padding:.9rem 1rem;font-size:.83rem;color:#9ca3af">Sin reembolsos este mes.</div>';
-  // Borradores primero
-  if(rsBorradores.length){
-    rhtml+='<div style="padding:6px 1rem 3px;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#d97706;background:#fffbeb;border-bottom:1px solid #f3f4f6">⏳ Pendientes de recibir</div>';
-    rsBorradores.forEach(function(r){
-      var g=r.gasto_id?A.gastos.find(function(x){return x.id===r.gasto_id;}):null;
-      rhtml+='<div class="row" style="background:#fffbeb"><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.85rem;color:#92400e">'+r.concepto+'</div>'+(r.origen?'<div style="font-size:.7rem;color:#9ca3af">De: '+r.origen+'</div>':'')+(g?'<div style="font-size:.7rem;color:#5b21b6;font-weight:700">Cubre: '+g.nombre+'</div>':'')+'</div><div style="display:flex;align-items:center;gap:4px"><div style="font-weight:800;font-size:.88rem;color:#d97706">'+fmt(r.monto)+'</div><button type="button" class="ibtn ok" data-action="recibirReimb" data-id="'+r.id+'" title="Marcar como recibido" style="font-size:.8rem">✓</button><button type="button" class="ibtn edit" data-action="editReimb" data-id="'+r.id+'">✎</button><button type="button" class="ibtn" data-action="delReimb" data-id="'+r.id+'">✕</button></div></div>';
-    });
-  }
-  // Recibidos
-  if(rsRecibidos.length){
-    if(rsBorradores.length)rhtml+='<div style="padding:6px 1rem 3px;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#0e7490;background:#f0fdfe;border-bottom:1px solid #f3f4f6">✅ Recibidos</div>';
-    rsRecibidos.forEach(function(r){var g=r.gasto_id?A.gastos.find(function(x){return x.id===r.gasto_id;}):null;rhtml+='<div class="row"><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.85rem">'+r.concepto+'</div>'+(r.origen?'<div style="font-size:.7rem;color:#9ca3af">De: '+r.origen+'</div>':'')+(g?'<div style="font-size:.7rem;color:#5b21b6;font-weight:700">Cubre: '+g.nombre+'</div>':'')+(r.fijo?'<span style="font-size:.63rem;font-weight:800;color:#5b21b6;background:#ede9fe;padding:1px 7px;border-radius:20px;display:inline-block;margin-top:3px">📌 se proyecta</span>':'')+'</div><div style="font-weight:800;font-size:.88rem;color:#0e7490">'+fmt(r.monto)+'</div><button type="button" class="ibtn edit" data-action="editReimb" data-id="'+r.id+'">✎</button><button type="button" class="ibtn" data-action="delReimb" data-id="'+r.id+'">✕</button></div>';});
-  }
+  rs.forEach(function(r){var g=r.gasto_id?A.gastos.find(function(x){return x.id===r.gasto_id;}):null;rhtml+='<div class="row"><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.85rem">'+r.concepto+'</div>'+(r.origen?'<div style="font-size:.7rem;color:#9ca3af">De: '+r.origen+'</div>':'')+(g?'<div style="font-size:.7rem;color:#5b21b6;font-weight:700">Cubre: '+g.nombre+'</div>':'')+(r.fijo?'<span style="font-size:.63rem;font-weight:800;color:#5b21b6;background:#ede9fe;padding:1px 7px;border-radius:20px;display:inline-block;margin-top:3px">📌 se proyecta</span>':'')+'</div><div style="font-weight:800;font-size:.88rem;color:#0e7490">'+fmt(r.monto)+'</div><button type="button" class="ibtn edit" data-action="editReimb" data-id="'+r.id+'">✎</button><button type="button" class="ibtn" data-action="delReimb" data-id="'+r.id+'">✕</button></div>';});
   el('i-reimb').innerHTML=rhtml;
   var meses=[];for(var i=-11;i<=0;i++)meses.push(addMes(MES_HOY,i));meses.reverse();
   var hh='';meses.forEach(function(m2){var ts2=totalSueldosMes(m2),tr=totalReembsMes(m2),oi=totalOtrosHogarMes(m2);hh+='<div class="ing-row'+(m2===mes?' current':'')+'"><span style="font-weight:700">'+mesLabel(m2)+(m2===mes?' ←':'')+'</span><div style="text-align:right"><div style="font-weight:800;color:#6c63ff">'+fmt(ts2+tr+oi)+'</div><div style="font-size:.68rem;color:#9ca3af">'+fmt(ts2)+' sueldos'+(tr>0?' + '+fmt(tr)+' reimb.':'')+(oi>0?' + '+fmt(oi)+' otros':'')+'</div></div></div>';});
@@ -1059,7 +1044,6 @@ document.addEventListener('click',function(e){
   else if(action==='varGasto')openVarGastoModal(id);
   else if(action==='delReimb')doDeleteReimb(id);
   else if(action==='editReimb')openReimbModal(id);
-  else if(action==='recibirReimb')doRecibirReimb(id);
   else if(action==='delGP')doDeleteGP(id);
   else if(action==='editGP'){
     var h=A.gastosPersonales.find(function(x){return x.id===id;});if(!h)return;
@@ -1373,8 +1357,6 @@ function openReimbModal(editId){
   el('mr-monto').value=r?r.monto:'';
   el('mr-origen').value=r?r.origen:'';
   el('mr-fijo').checked=r?!!r.fijo:false;
-  // recibido: true por defecto en nuevo, usar valor guardado en edición
-  el('mr-recibido').checked=r?(r.recibido!==false):true;
   var gdm=A.gastos.filter(function(g){return gastoEnMes(g,A.viewMes)&&g.monto>0;});
   el('mr-gastos-list').innerHTML=gdm.map(function(g){var sel=r&&r.gasto_id===g.id;return '<div class="reimb-opt'+(sel?' sel':'')+'" data-rid="'+g.id+'"><input type="radio" name="rg" value="'+g.id+'"'+(sel?' checked':'')+'>'+
   '<div style="flex:1"><div style="font-weight:700;font-size:.82rem">'+g.nombre+'</div><div style="font-size:.7rem;color:#9ca3af">'+fmt(g.monto)+'</div></div></div>';}).join('')+
@@ -1408,23 +1390,15 @@ el('btn-save-reimb').addEventListener('click',async function(){
   var concepto=el('mr-concepto').value.trim();if(!concepto){alert('Ingresa un concepto');return;}
   var monto=parseFloat(el('mr-monto').value)||0;if(!monto){alert('Ingresa un monto');return;}
   var fijo=el('mr-fijo').checked,origen=el('mr-origen').value.trim();
-  var recibido=el('mr-recibido').checked;
   if(A.editReimbId){
-    var r=await sb.from('reembolsos').update({concepto:concepto,monto:monto,origen:origen,gasto_id:A.reimbGastoId||null,fijo:fijo,recibido:recibido}).eq('id',A.editReimbId).select().single();
+    var r=await sb.from('reembolsos').update({concepto:concepto,monto:monto,origen:origen,gasto_id:A.reimbGastoId||null,fijo:fijo}).eq('id',A.editReimbId).select().single();
     if(!r.error){var idx=A.reembolsos.findIndex(function(x){return x.id===A.editReimbId;});if(idx>=0)A.reembolsos[idx]=r.data;}
   }else{
-    var r2=await sb.from('reembolsos').insert({hogar_id:A.hogar.id,concepto:concepto,monto:monto,origen:origen,mes:A.viewMes,gasto_id:A.reimbGastoId||null,fijo:fijo,recibido:recibido}).select().single();
+    var r2=await sb.from('reembolsos').insert({hogar_id:A.hogar.id,concepto:concepto,monto:monto,origen:origen,mes:A.viewMes,gasto_id:A.reimbGastoId||null,fijo:fijo}).select().single();
     if(!r2.error)A.reembolsos.push(r2.data);
   }
   closeModal('modal-reimb');render();
 });
-
-async function doRecibirReimb(id){
-  var r=A.reembolsos.find(function(x){return x.id===id;});if(!r)return;
-  var res=await sb.from('reembolsos').update({recibido:true}).eq('id',id).select().single();
-  if(!res.error){var idx=A.reembolsos.findIndex(function(x){return x.id===id;});if(idx>=0)A.reembolsos[idx]=res.data;}
-  render();if(document.querySelector('.tab.active').dataset.tab==='ingresos')renderIngresos(A.viewMes);
-}
 
 el('btn-add-gp').addEventListener('click',function(){
   A.editGPId=null;selCatsGP=[];
