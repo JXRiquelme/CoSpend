@@ -228,14 +228,9 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     </button>
     <div style="margin:.75rem 0;font-size:.8rem;color:#9ca3af">— o con email —</div>
     <input type="email" id="auth-email" placeholder="tu@email.com" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;margin-bottom:.5rem">
-    <div id="auth-password-row" style="position:relative;margin-bottom:.5rem">
-      <input type="password" id="auth-password" placeholder="Contraseña (opcional)" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;box-sizing:border-box">
-      <span id="auth-pw-toggle" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:.85rem;color:#9ca3af;user-select:none">👁</span>
-    </div>
-    <div style="font-size:.72rem;color:#9ca3af;margin-bottom:.6rem;text-align:left">Si tienes contraseña configurada, escríbela para entrar. Si no, deja el campo vacío y te enviamos un link.</div>
-    <button type="button" class="btn" id="btn-email">Entrar con email</button>
+    <button type="button" class="btn" id="btn-email">Enviar link de acceso</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.77</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.76</div>
   </div>
 </div>
 
@@ -408,7 +403,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.77</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.76</span></footer>
 </div>
 
 <!-- MODAL GASTO -->
@@ -562,35 +557,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
 
     <div style="border-top:1.5px solid #f3f4f6;padding-top:.7rem;display:flex;flex-direction:column;gap:6px">
       <button type="button" class="btn-save" style="width:100%" id="btn-save-perfil">Guardar cambios</button>
-      <button type="button" class="btn-save" style="width:100%;background:#1a1a2e" id="btn-change-password">🔑 Configurar contraseña</button>
       <button type="button" class="btn-cancel" style="width:100%;color:#ef4444;border-color:#ef4444" id="btn-logout">Cerrar sesión</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL CAMBIAR CONTRASEÑA -->
-<div class="modal-bg" id="modal-password">
-  <div class="modal" style="max-width:340px">
-    <div class="modal-title">🔑 Configurar contraseña</div>
-    <div style="font-size:.78rem;color:#6b7280;margin-bottom:.9rem;line-height:1.5">Configura una contraseña para poder entrar con tu email y contraseña, sin necesitar el link al correo.</div>
-    <div class="form-group">
-      <label>Nueva contraseña</label>
-      <div style="position:relative">
-        <input type="password" id="pw-nueva" placeholder="Mínimo 6 caracteres" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;box-sizing:border-box;padding-right:38px">
-        <span data-pwtoggle="pw-nueva" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:.85rem;color:#9ca3af;user-select:none">👁</span>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Confirmar contraseña</label>
-      <div style="position:relative">
-        <input type="password" id="pw-confirmar" placeholder="Repite la contraseña" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;box-sizing:border-box;padding-right:38px">
-        <span data-pwtoggle="pw-confirmar" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:.85rem;color:#9ca3af;user-select:none">👁</span>
-      </div>
-    </div>
-    <div id="pw-msg" style="font-size:.78rem;margin-bottom:.5rem"></div>
-    <div class="modal-footer">
-      <button type="button" class="btn-cancel" onclick="closeModal('modal-password')">Cancelar</button>
-      <button type="button" class="btn-save" id="btn-save-password">Guardar contraseña</button>
     </div>
   </div>
 </div>
@@ -1403,21 +1370,6 @@ el('btn-logout').addEventListener('click',async function(){
   hideLoading();showScreen('auth');
 });
 
-// Configurar contraseña
-el('btn-change-password').addEventListener('click',function(){
-  el('pw-nueva').value='';el('pw-confirmar').value='';el('pw-msg').textContent='';
-  el('modal-password').classList.add('open');
-});
-el('btn-save-password').addEventListener('click',async function(){
-  var pw1=el('pw-nueva').value,pw2=el('pw-confirmar').value,msg=el('pw-msg');
-  if(!pw1||pw1.length<6){msg.textContent='La contraseña debe tener al menos 6 caracteres';msg.style.color='#ef4444';return;}
-  if(pw1!==pw2){msg.textContent='Las contraseñas no coinciden';msg.style.color='#ef4444';return;}
-  msg.textContent='Guardando...';msg.style.color='#6b7280';
-  var r=await sb.auth.updateUser({password:pw1});
-  if(r.error){msg.textContent='Error: '+r.error.message;msg.style.color='#ef4444';}
-  else{msg.textContent='✓ Contraseña configurada correctamente';msg.style.color='#22c55e';setTimeout(function(){closeModal('modal-password');},1500);}
-});
-
 
 el('btn-mes-prev').addEventListener('click',function(){A.viewMes=addMes(A.viewMes,-1);render();});
 el('btn-mes-next').addEventListener('click',function(){A.viewMes=addMes(A.viewMes,1);render();});
@@ -1473,27 +1425,13 @@ el('btn-unirse-hogar').addEventListener('click',async function(){
   if(sueldo>0)await sb.from('sueldos').insert({miembro_id:m.data.id,hogar_id:h.data.id,mes:MES_HOY,monto:sueldo});
   await cargarDatos();
 });
-// Toggle password visibility in auth screen
-el('auth-pw-toggle').addEventListener('click',function(){var inp=el('auth-password');inp.type=inp.type==='password'?'text':'password';});
-// Toggle password visibility in modal
-document.addEventListener('click',function(e){var btn=e.target.closest('[data-pwtoggle]');if(!btn)return;var inp=el(btn.dataset.pwtoggle);if(inp)inp.type=inp.type==='password'?'text':'password';});
-
-el('btn-google').addEventListener('click',function(){sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin+'/'}});});
+el('btn-google').addEventListener('click',function(){sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}});});
 el('btn-email').addEventListener('click',async function(){
-  var email=el('auth-email').value.trim(),msg=el('auth-msg'),pw=el('auth-password').value;
+  var email=el('auth-email').value.trim(),msg=el('auth-msg');
   if(!email){msg.textContent='Ingresa tu email';msg.style.color='#ef4444';return;}
-  if(pw){
-    // Login con contraseña
-    msg.textContent='Verificando...';msg.style.color='#6b7280';
-    var r=await sb.auth.signInWithPassword({email:email,password:pw});
-    if(r.error){msg.textContent='Error: '+r.error.message;msg.style.color='#ef4444';}
-    else{msg.textContent='¡Bienvenido!';msg.style.color='#22c55e';}
-  }else{
-    // Magic link
-    var r2=await sb.auth.signInWithOtp({email:email,options:{emailRedirectTo:window.location.origin+'/'}});
-    if(r2.error){msg.textContent='Error: '+r2.error.message;msg.style.color='#ef4444';}
-    else{msg.textContent='Link enviado. Revisa tu correo.';msg.style.color='#22c55e';}
-  }
+  var r=await sb.auth.signInWithOtp({email:email,options:{emailRedirectTo:window.location.href}});
+  if(r.error){msg.textContent='Error: '+r.error.message;msg.style.color='#ef4444';}
+  else{msg.textContent='Link enviado. Revisa tu correo.';msg.style.color='#22c55e';}
 });
 
 var TARJETA_PALETTE=['#1a1a2e','#6c63ff','#ef4444','#22c55e','#f59e0b','#3b82f6','#ec4899','#0e7490','#7c3aed','#f97316'];
