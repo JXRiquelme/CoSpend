@@ -230,7 +230,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <input type="email" id="auth-email" placeholder="tu@email.com" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;margin-bottom:.5rem">
     <button type="button" class="btn" id="btn-email">Enviar link de acceso</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.75d</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.75</div>
   </div>
 </div>
 
@@ -403,7 +403,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.75d</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.75</span></footer>
 </div>
 
 <!-- MODAL CAMBIO DE MES AUTOMÁTICO -->
@@ -1567,16 +1567,6 @@ async function cargarDatos(){
   A.gastosPersonales=res[6].data||[];A.otrosIngresos=res[7]&&res[7].data||[];
   A.tarjetas=res[8]&&res[8].data||[];
   el('btn-user').textContent=A.miembro.nombre.charAt(0).toUpperCase();
-  // DEBUG TEMPORAL - remover después
-  console.log('=== COSPEND DEBUG ===');
-  console.log('user.id:', A.user.id);
-  console.log('user.email:', A.user.email);
-  console.log('miembro.id:', A.miembro.id);
-  console.log('gastos count:', A.gastos.length);
-  console.log('gastosPersonales count:', A.gastosPersonales.length);
-  console.log('viewMes:', A.viewMes);
-  console.log('gastos sample:', JSON.stringify(A.gastos.slice(0,2)));
-  console.log('===================');
   _cargando=false;hideLoading();showScreen('app');render();
   // Mostrar aviso de cambio de mes automático si corresponde (hasta 2 veces por sesión)
   setTimeout(function(){mostrarCambioMesAutoSiCorresponde();},800);
