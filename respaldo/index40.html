@@ -239,7 +239,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <div style="font-size:.72rem;color:#9ca3af;margin-bottom:.6rem;text-align:left">Si tienes contraseña configurada, escríbela para entrar. Si no, deja el campo vacío y te enviamos un link.</div>
     <button type="button" class="btn" id="btn-email">Entrar con email</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.78</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.77</div>
   </div>
 </div>
 
@@ -412,7 +412,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.78</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.77</span></footer>
 </div>
 
 <!-- MODAL GASTO -->
@@ -572,31 +572,6 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
   </div>
 </div>
 
-<!-- MODAL VARIACIÓN GASTO -->
-<div class="modal-bg" id="modal-var-gasto">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-title">⚡ Variación de monto</div>
-    <div style="font-size:.78rem;color:#6b7280;margin-bottom:.5rem" id="var-gasto-nombre">—</div>
-    <div style="background:#f5f3ff;border-radius:10px;padding:.75rem;margin-bottom:.9rem;font-size:.78rem;color:#5b21b6;line-height:1.5">
-      Registra el monto real de este mes. La proyección usará este valor para los meses siguientes hasta que registres otro.<br>
-      <strong>Monto base:</strong> <span id="var-monto-base">—</span>
-    </div>
-    <div class="form-group">
-      <label>Monto real este mes (CLP)</label>
-      <div class="input-row"><span>$</span><input type="number" id="var-monto-input" placeholder="0" min="0"></div>
-    </div>
-    <div class="form-group">
-      <label>Nota (opcional)</label>
-      <input type="text" id="var-nota-input" placeholder="ej: Cuota 25.665 + mantención 3.264">
-    </div>
-    <div id="var-historial" style="margin-top:.3rem"></div>
-    <div class="modal-footer">
-      <button type="button" class="btn-cancel" onclick="closeModal('modal-var-gasto')">Cancelar</button>
-      <button type="button" class="btn-save" style="background:#f59e0b" id="btn-save-var-gasto">Guardar variación</button>
-    </div>
-  </div>
-</div>
-
 <!-- MODAL CAMBIAR CONTRASEÑA -->
 <div class="modal-bg" id="modal-password">
   <div class="modal" style="max-width:340px">
@@ -741,7 +716,7 @@ function calcViewMesInicial(cambioMes){
   // 'dia1' y 'manual': mostrar el mes calendario actual
   return MES_HOY;
 }
-var A={user:null,miembro:null,hogar:null,miembros:[],sueldos:[],gastos:[],pagos:[],reembolsos:[],gastosPersonales:[],otrosIngresos:[],tarjetas:[],variaciones:[],viewMes:MES_HOY,projTab:'conjunto',metaAhorro:0,metaAhorroPers:0,editGPId:null,colorSel:PALETTE[0],tarjetaColorSel:'#1a1a2e',editGastoId:null,reimbGastoId:null,editTarjetaId:null,editReimbId:null};
+var A={user:null,miembro:null,hogar:null,miembros:[],sueldos:[],gastos:[],pagos:[],reembolsos:[],gastosPersonales:[],otrosIngresos:[],tarjetas:[],viewMes:MES_HOY,projTab:'conjunto',metaAhorro:0,metaAhorroPers:0,editGPId:null,colorSel:PALETTE[0],tarjetaColorSel:'#1a1a2e',editGastoId:null,reimbGastoId:null,editTarjetaId:null,editReimbId:null};
 var GP_F={q:'',sort:'fecha-desc',ps:10,pg:0};
 var G_F={q:'',sort:'fecha-desc',ps:10,pg:0};
 var selCatsGP=[]; // selected cats in personal modal
@@ -816,16 +791,7 @@ function saldoPersonalMesProy(mes){
   var reembProp=Math.round(totalReembsProyMes(mes)*prop);
   return sobra-gastP+totalOtrosPersonalMes(mes)+reembProp-A.metaAhorroPers;
 }
-// Monto real de un gasto en un mes dado, considerando variaciones registradas
-function montoGastoEnMes(g,mes){
-  var vExacta=(A.variaciones||[]).find(function(v){return v.gasto_id===g.id&&v.mes===mes;});
-  if(vExacta)return vExacta.monto;
-  // Para proyección futura: usar la última variación registrada
-  var vars=(A.variaciones||[]).filter(function(v){return v.gasto_id===g.id&&v.mes<=mes;});
-  if(vars.length){vars.sort(function(a,b){return a.mes>b.mes?-1:1;});return vars[0].monto;}
-  return g.monto;
-}
-function totalGastosMes(mes){return A.gastos.filter(function(g){return gastoEnMes(g,mes);}).reduce(function(t,g){return t+montoGastoEnMes(g,mes);},0);}
+function totalGastosMes(mes){return A.gastos.filter(function(g){return gastoEnMes(g,mes);}).reduce(function(t,g){return t+g.monto;},0);}
 function saldoPersonalMes(mes){if(!A.miembro)return 0;var ts=totalSueldosMes(mes);var s=sueldoMiembro(A.miembro,mes);var prop=ts>0?s/ts:1/Math.max(A.miembros.length,1);var sobra=(totalIngresosMes(mes)-totalGastosMes(mes)-A.metaAhorro)*prop;var gastP=A.gastosPersonales.filter(function(h){return mesFacturacionDeGP(h.fecha)===mes;}).reduce(function(t,h){return t+h.monto;},0);return sobra-gastP+totalOtrosPersonalMes(mes)-A.metaAhorroPers;}
 function reimbForGasto(gid,mes){return A.reembolsos.filter(function(r){return r.mes===mes&&r.gasto_id===gid;}).reduce(function(t,r){return t+r.monto;},0);}
 var EMOJIS={Mundo:'🌍',Wom:'📱',Arriendo:'🏠',Auto:'🚗',Luz:'💡',Lider:'🛒',Bencina:'⛽',Mascotas:'🐱',Banco:'🏦',Scotia:'💳',Netflix:'📺',Spotify:'🎵',Gas:'🔥'};
@@ -914,9 +880,7 @@ function renderGastos(mes){
     items.forEach(function(x){
       var pagado=esPagado(x,mes),cn=cuotaNum(x,mes),reimb=reimbForGasto(x.id,mes);
       var tarj=x.tarjeta_id?A.tarjetas.find(function(t){return t.id===x.tarjeta_id;}):null;
-      var montoReal=montoGastoEnMes(x,mes);
-      var tieneVar=montoReal!==x.monto;
-      html+='<div class="row"><div class="row-icon" style="background:'+grp.color+'22">'+emojiFor(x.nombre)+'</div><div class="row-info"><div class="row-name">'+x.nombre+'</div>'+(x.notas?'<div class="row-sub">'+x.notas+'</div>':'')+'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px"><span class="badge '+(pagado?'badge-paid':'badge-pend')+'">'+(pagado?'✓ pagado':'⏳ pendiente')+'</span>'+(cn?'<span class="badge badge-cuota">'+cn+'/'+x.cuotas+'</span>':'')+(x.fijo?'<span class="badge badge-fixed">fijo</span>':'')+(tieneVar?'<span class="badge" style="background:#fef3c7;color:#92400e">⚡ variación</span>':'')+(tarj?'<span class="tarjeta-chip" style="background:'+tarj.color+'">💳 '+tarj.banco+'</span>':'')+'</div></div><div class="row-right">'+(montoReal>0?'<div class="row-amount"'+(tieneVar?' style="color:#f59e0b"':'')+'>'+fmt(montoReal)+'</div>':'<div style="font-size:.72rem;color:#9ca3af">—</div>')+(tieneVar?'<div style="font-size:.68rem;color:#9ca3af;text-decoration:line-through">'+fmt(x.monto)+'</div>':'')+(reimb>0?'<div style="font-size:.72rem;color:#5b21b6;font-weight:700">Neto: '+fmt(Math.max(0,montoReal-reimb))+'</div>':'')+'<div style="display:flex;gap:2px"><button type="button" class="ibtn ok" data-action="togglePago" data-id="'+x.id+'" data-mes="'+mes+'">✓</button><button type="button" class="ibtn edit" data-action="editGasto" data-id="'+x.id+'">✎</button>'+(x.fijo||x.cuotas>1?'<button type="button" class="ibtn edit" data-action="varGasto" data-id="'+x.id+'" title="Registrar variación de monto">⚡</button>':'')+'<button type="button" class="ibtn edit" data-action="moveGasto" data-id="'+x.id+'" title="Cambiar mes">📅</button><button type="button"class="ibtn" data-action="delGasto" data-id="'+x.id+'">✕</button></div></div></div>';
+      html+='<div class="row"><div class="row-icon" style="background:'+grp.color+'22">'+emojiFor(x.nombre)+'</div><div class="row-info"><div class="row-name">'+x.nombre+'</div>'+(x.notas?'<div class="row-sub">'+x.notas+'</div>':'')+'<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:3px"><span class="badge '+(pagado?'badge-paid':'badge-pend')+'">'+(pagado?'✓ pagado':'⏳ pendiente')+'</span>'+(cn?'<span class="badge badge-cuota">'+cn+'/'+x.cuotas+'</span>':'')+(x.fijo?'<span class="badge badge-fixed">fijo</span>':'')+(tarj?'<span class="tarjeta-chip" style="background:'+tarj.color+'">💳 '+tarj.banco+'</span>':'')+'</div></div><div class="row-right">'+(x.monto>0?'<div class="row-amount">'+fmt(x.monto)+'</div>':'<div style="font-size:.72rem;color:#9ca3af">—</div>')+(reimb>0?'<div style="font-size:.72rem;color:#5b21b6;font-weight:700">Neto: '+fmt(Math.max(0,x.monto-reimb))+'</div>':'')+'<div style="display:flex;gap:2px"><button type="button" class="ibtn ok" data-action="togglePago" data-id="'+x.id+'" data-mes="'+mes+'">✓</button><button type="button" class="ibtn edit" data-action="editGasto" data-id="'+x.id+'">✎</button><button type="button" class="ibtn edit" data-action="moveGasto" data-id="'+x.id+'" title="Cambiar mes">📅</button><button type="button"class="ibtn" data-action="delGasto" data-id="'+x.id+'">✕</button></div></div></div>';
     });
   });
   var ctrlG='<div class="list-controls"><input type="text" class="list-ctrl-input" id="g-search" placeholder="🔍 Buscar..." value="'+(_gSearch||'').replace(/"/g,'&quot;')+'"><select class="list-ctrl-select" id="g-sort"><option value="default"'+(_gSort==='default'?' selected':'')+'>📅 Por defecto</option><option value="monto-desc"'+(_gSort==='monto-desc'?' selected':'')+'>💰 Mayor monto</option><option value="monto-asc"'+(_gSort==='monto-asc'?' selected':'')+'>💰 Menor monto</option><option value="nombre-asc"'+(_gSort==='nombre-asc'?' selected':'')+'>🔤 Nombre</option></select><select class="list-ctrl-select" id="g-size"><option value="10"'+(_gSize===10?' selected':'')+'>10 filas</option><option value="20"'+(_gSize===20?' selected':'')+'>20 filas</option><option value="0"'+(_gSize===0?' selected':'')+'>Todas</option></select></div>';
@@ -1041,7 +1005,6 @@ document.addEventListener('click',function(e){
   else if(action==='editGasto')openGastoModal(id);
   else if(action==='delGasto')doDeleteGasto(id);
   else if(action==='moveGasto')openMoveGastoModal(id);
-  else if(action==='varGasto')openVarGastoModal(id);
   else if(action==='delReimb')doDeleteReimb(id);
   else if(action==='editReimb')openReimbModal(id);
   else if(action==='delGP')doDeleteGP(id);
@@ -1058,7 +1021,6 @@ document.addEventListener('click',function(e){
     el('modal-gp').classList.add('open');
   }
   else if(action==='delOtroIngreso')doDeleteOtroIngreso(id);
-  else if(action==='delVar')doDeleteVar(id);
   else if(action==='editTarjeta')openTarjetaModal(id);
   else if(action==='delTarjeta')doDeleteTarjeta(id);
   else if(action==='saveSueldo'){var inp=el('sueldo-input-'+btn.dataset.mid);if(inp)doUpdateSueldo(btn.dataset.mid,btn.dataset.mes,inp.value).then(function(){btn.textContent='✓';setTimeout(function(){btn.textContent='Guardar';},1200);});}
@@ -1204,42 +1166,6 @@ function openMoveGastoModal(gastoId){
 }
 
 async function doDeleteGasto(id){if(!confirm('¿Eliminar este gasto?'))return;await sb.from('gastos').delete().eq('id',id);A.gastos=A.gastos.filter(function(g){return g.id!==id;});render();}
-
-var _varGastoId=null;
-function openVarGastoModal(gastoId){
-  var g=A.gastos.find(function(x){return x.id===gastoId;});if(!g)return;
-  _varGastoId=gastoId;
-  el('var-gasto-nombre').textContent=g.nombre+(g.notas?' · '+g.notas:'');
-  el('var-monto-base').textContent=fmt(g.monto)+' (monto original)';
-  // Prellenar con la variación de este mes si ya existe
-  var vActual=(A.variaciones||[]).find(function(v){return v.gasto_id===gastoId&&v.mes===A.viewMes;});
-  el('var-monto-input').value=vActual?vActual.monto:montoGastoEnMes(g,A.viewMes);
-  el('var-nota-input').value=vActual?vActual.nota||'':'';
-  // Historial de variaciones
-  var vars=(A.variaciones||[]).filter(function(v){return v.gasto_id===gastoId;}).sort(function(a,b){return a.mes>b.mes?-1:1;});
-  var hist=vars.length?'<div style="font-size:.7rem;font-weight:800;color:#9ca3af;letter-spacing:.05em;margin-bottom:.4rem">HISTORIAL DE VARIACIONES</div>'+vars.map(function(v){return'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f3f4f6;font-size:.8rem"><div><span style="font-weight:700">'+mesLabel(v.mes)+'</span>'+(v.nota?'<div style="font-size:.7rem;color:#9ca3af">'+v.nota+'</div>':'')+'</div><div style="display:flex;align-items:center;gap:6px"><span style="font-weight:800;color:'+(v.monto!==g.monto?'#f59e0b':'#22c55e')+'">'+fmt(v.monto)+'</span><button type="button" class="ibtn" data-action="delVar" data-id="'+v.id+'" style="font-size:.75rem">✕</button></div></div>';}).join(''):'<div style="font-size:.78rem;color:#9ca3af">Sin variaciones registradas.</div>';
-  el('var-historial').innerHTML=hist;
-  el('modal-var-gasto').classList.add('open');
-}
-el('btn-save-var-gasto').addEventListener('click',async function(){
-  if(!_varGastoId)return;
-  var monto=parseInt(el('var-monto-input').value)||0;
-  if(!monto){alert('Ingresa un monto');return;}
-  var nota=el('var-nota-input').value.trim();
-  var g=A.gastos.find(function(x){return x.id===_varGastoId;});
-  // Verificar si ya hay variación para este mes (upsert)
-  var vExist=(A.variaciones||[]).find(function(v){return v.gasto_id===_varGastoId&&v.mes===A.viewMes;});
-  if(vExist){
-    var r=await sb.from('variaciones_gasto').update({monto:monto,nota:nota}).eq('id',vExist.id).select().single();
-    if(r.error){alert('Error: '+r.error.message);return;}
-    var idx=A.variaciones.findIndex(function(v){return v.id===vExist.id;});if(idx>=0)A.variaciones[idx]=r.data;
-  }else{
-    var r2=await sb.from('variaciones_gasto').insert({gasto_id:_varGastoId,hogar_id:A.hogar.id,mes:A.viewMes,monto:monto,nota:nota}).select().single();
-    if(r2.error){alert('Error: '+r2.error.message);return;}
-    if(!A.variaciones)A.variaciones=[];A.variaciones.push(r2.data);
-  }
-  closeModal('modal-var-gasto');render();
-});
 el('btn-save-move-gasto').addEventListener('click',async function(){
   var id=A._moveGastoId;if(!id)return;
   var g=A.gastos.find(function(x){return x.id===id;});if(!g)return;
@@ -1259,14 +1185,6 @@ el('btn-save-move-gasto').addEventListener('click',async function(){
 async function doDeleteReimb(id){await sb.from('reembolsos').delete().eq('id',id);A.reembolsos=A.reembolsos.filter(function(r){return r.id!==id;});render();}
 async function doDeleteGP(id){await sb.from('gastos_personales').delete().eq('id',id);A.gastosPersonales=A.gastosPersonales.filter(function(h){return h.id!==id;});render();}
 async function doDeleteOtroIngreso(id){await sb.from('otros_ingresos').delete().eq('id',id);A.otrosIngresos=(A.otrosIngresos||[]).filter(function(o){return o.id!==id;});render();}
-async function doDeleteVar(id){
-  if(!confirm('¿Eliminar esta variación?'))return;
-  await sb.from('variaciones_gasto').delete().eq('id',id);
-  A.variaciones=(A.variaciones||[]).filter(function(v){return v.id!==id;});
-  // Reabrir el modal actualizado
-  if(_varGastoId)openVarGastoModal(_varGastoId);
-  render();
-}
 async function doUpdateSueldo(mid,mes,val){var monto=parseInt(val)||0;var existing=A.sueldos.find(function(s){return s.miembro_id===mid&&s.mes===mes;});if(existing){await sb.from('sueldos').update({monto:monto}).eq('id',existing.id);existing.monto=monto;}else{var r=await sb.from('sueldos').insert({miembro_id:mid,hogar_id:A.hogar.id,mes:mes,monto:monto}).select().single();if(!r.error)A.sueldos.push(r.data);}render();}
 
 function openGastoModal(editId){
@@ -1635,8 +1553,7 @@ async function cargarDatos(){
     sb.from('reembolsos').select('*').eq('hogar_id',hid),
     sb.from('gastos_personales').select('*').eq('user_id',A.user.id).eq('hogar_id',hid),
     sb.from('otros_ingresos').select('*').eq('hogar_id',hid),
-    sb.from('tarjetas').select('*').eq('miembro_id',A.miembro.id),
-    sb.from('variaciones_gasto').select('*').eq('hogar_id',hid)
+    sb.from('tarjetas').select('*').eq('miembro_id',A.miembro.id)
   ]);
   if(!res[0].data){await sb.from('miembros').delete().eq('user_id',A.user.id);_cargando=false;hideLoading();showScreen('onboard');return;}
   A.hogar=res[0].data;A.miembros=res[1].data||[];A.sueldos=res[2].data||[];
@@ -1645,7 +1562,7 @@ async function cargarDatos(){
   A.categorias=A.hogar.categorias?JSON.parse(A.hogar.categorias):null;
   A.gastos=res[3].data||[];A.pagos=res[4].data||[];A.reembolsos=res[5].data||[];
   A.gastosPersonales=res[6].data||[];A.otrosIngresos=res[7]&&res[7].data||[];
-  A.tarjetas=res[8]&&res[8].data||[];A.variaciones=res[9]&&res[9].data||[];
+  A.tarjetas=res[8]&&res[8].data||[];
   el('btn-user').textContent=A.miembro.nombre.charAt(0).toUpperCase();
   _cargando=false;hideLoading();showScreen('app');render();
 }
