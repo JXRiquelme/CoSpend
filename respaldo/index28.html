@@ -230,7 +230,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <input type="email" id="auth-email" placeholder="tu@email.com" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;margin-bottom:.5rem">
     <button type="button" class="btn" id="btn-email">Enviar link de acceso</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.70</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">v68</div>
   </div>
 </div>
 
@@ -403,7 +403,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.70</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.69</span></footer>
 </div>
 
 <!-- MODAL CAMBIO DE MES AUTOMÁTICO -->
@@ -670,37 +670,17 @@ function renderSettingsCats(){var cats=getCats();var html=cats.map(function(c,i)
 var NOW=new Date();
 var MES_HOY=NOW.getFullYear()+'-'+String(NOW.getMonth()+1).padStart(2,'0');
 function feriadosChile(y){
-  // Feriados fijos inamovibles
-  var f=['01-01','05-01','05-21','07-16','08-15','09-18','09-19','10-12','10-31','11-01','12-08','12-25'];
+  // Feriados fijos
+  var f=['01-01','05-01','05-21','06-20','07-16','08-15','09-18','09-19','10-12','10-31','11-01','12-08','12-25'];
   var set=new Set(f.map(function(d){return y+'-'+d;}));
-  // Día Nacional de los Pueblos Indígenas: 21 de junio
-  // Si cae sáb→lun, si cae dom→lun
-  (function(){
-    var base=new Date(y,5,21);var dow=base.getDay();
-    var fecha=base;
-    if(dow===6){fecha=new Date(y,5,23);}else if(dow===0){fecha=new Date(y,5,22);}
-    function pad(n){return String(n).padStart(2,'0');}
-    set.add(y+'-'+pad(fecha.getMonth()+1)+'-'+pad(fecha.getDate()));
-  })();
-  // San Pedro y San Pablo: 29 de junio
-  // Si cae sáb→lun, si cae dom→lun
-  (function(){
-    var base=new Date(y,5,29);var dow=base.getDay();
-    var fecha=base;
-    if(dow===6){fecha=new Date(y,6,1);}else if(dow===0){fecha=new Date(y,6,0);}
-    function pad(n){return String(n).padStart(2,'0');}
-    set.add(y+'-'+pad(fecha.getMonth()+1)+'-'+pad(fecha.getDate()));
-  })();
   // Semana Santa (Viernes Santo y Sábado Santo): calculados con algoritmo de Easter
-  (function(){
-    var a=y%19,b=Math.floor(y/100),c=y%100,d2=Math.floor(b/4),e=b%4,f2=Math.floor((b+8)/25),g=Math.floor((b-f2+1)/3),h=(19*a+b-d2-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),month=Math.floor((h+l-7*m+114)/31),day=((h+l-7*m+114)%31)+1;
-    var easter=new Date(y,month-1,day);
-    var viernes=new Date(easter);viernes.setDate(easter.getDate()-2);
-    var sabado=new Date(easter);sabado.setDate(easter.getDate()-1);
-    function pad(n){return String(n).padStart(2,'0');}
-    set.add(y+'-'+pad(viernes.getMonth()+1)+'-'+pad(viernes.getDate()));
-    set.add(y+'-'+pad(sabado.getMonth()+1)+'-'+pad(sabado.getDate()));
-  })();
+  var a=y%19,b=Math.floor(y/100),c=y%100,d2=Math.floor(b/4),e=b%4,f2=Math.floor((b+8)/25),g=Math.floor((b-f2+1)/3),h=(19*a+b-d2-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),month=Math.floor((h+l-7*m+114)/31),day=((h+l-7*m+114)%31)+1;
+  var easter=new Date(y,month-1,day);
+  var viernes=new Date(easter);viernes.setDate(easter.getDate()-2);
+  var sabado=new Date(easter);sabado.setDate(easter.getDate()-1);
+  function pad(n){return String(n).padStart(2,'0');}
+  set.add(y+'-'+pad(viernes.getMonth()+1)+'-'+pad(viernes.getDate()));
+  set.add(y+'-'+pad(sabado.getMonth()+1)+'-'+pad(sabado.getDate()));
   return set;
 }
 function esFeriado(dateObj,feriadosSet){var y=dateObj.getFullYear(),mo=String(dateObj.getMonth()+1).padStart(2,'0'),d=String(dateObj.getDate()).padStart(2,'0');return feriadosSet.has(y+'-'+mo+'-'+d);}
@@ -719,13 +699,9 @@ function mostrarCambioMesAutoSiCorresponde(){
   var cm=A.miembro?A.miembro.cambio_mes||'dia1':'dia1';
   if(cm!=='penultimo_habil')return;
   var ph=penultimoHabilDelMes(MES_HOY),hoy=NOW.getDate();
-  // Mostrar si estamos en el rango: desde el penúltimo hábil hasta fin del mes actual
-  // (el viewMes ya habrá cambiado a mes siguiente, lo que confirma que aplica)
-  if(hoy<ph)return;
-  // Solo mostrar si el viewMes ya avanzó al mes siguiente (confirmación de cambio)
-  if(A.viewMes!==addMes(MES_HOY,1))return;
+  if(hoy!==ph)return; // Solo el día exacto del cambio
   var msg=el('cambio-mes-auto-msg');
-  if(msg)msg.innerHTML='Desde el <strong>'+ph+' de '+NOW.toLocaleString('es-CL',{month:'long'})+'</strong> (penúltimo día hábil), el sistema avanzó automáticamente a <strong>'+mesLabel(addMes(MES_HOY,1))+'</strong>.<br><br>Hoy es '+NOW.toLocaleString('es-CL',{weekday:'long',day:'numeric',month:'long'})+'.';
+  if(msg)msg.innerHTML='Hoy, <strong>'+hoy+' de '+NOW.toLocaleString('es-CL',{month:'long'})+'</strong>, es el penúltimo día hábil del mes.<br>El sistema ha avanzado automáticamente a <strong>'+mesLabel(addMes(MES_HOY,1))+'</strong>.';
   el('modal-cambio-mes-auto').classList.add('open');
 }
 function calcViewMesInicial(cambioMes){
@@ -748,17 +724,7 @@ var _gpPage=1,_gpSize=10,_gpSearch='',_gpSort='fecha-desc';
 var _gPage=1,_gSize=10,_gSearch='',_gSort='fecha-desc';
 var _cargando=false,_initDone=false;
 
-function getCatGP(h){
-  // Prefer 'categorias' (newer field, updated by edit), fall back to 'categoria'
-  // Returns the first (or only) category string with the current value
-  if(h.categorias){var arr=parseCats(h.categorias);if(arr.length)return arr[0];}
-  return h.categoria||'📦 Otros';
-}
-function getCatLabelGP(h){
-  // Returns display string: if multiple categories, join them; else single
-  if(h.categorias){var arr=parseCats(h.categorias);if(arr.length)return arr.join(', ');}
-  return h.categoria||'📦 Otros';
-}
+function fmt(n){return '$'+Math.round(n).toLocaleString('es-CL');}
 function addMes(m,n){var p=m.split('-');var d=new Date(+p[0],+p[1]-1+n,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function diffMeses(a,b){var pa=a.split('-'),pb=b.split('-');return(+pb[0]-+pa[0])*12+(+pb[1]-+pa[1]);}
 function mesLabel(m){var p=m.split('-'),d=new Date(+p[0],+p[1]-1,1);var s=d.toLocaleString('es-CL',{month:'long',year:'numeric'});return s.charAt(0).toUpperCase()+s.slice(1);}
@@ -932,12 +898,12 @@ function renderPersonal(mes){
   el('gp-saldo').textContent=fmt(saldo);el('gp-saldo').style.color=saldo>=0?'#fff':'#fca5a5';
   var allEntries=A.gastosPersonales.filter(function(h){return mesFacturacionDeGP(h.fecha)===mes;});
   var q=_gpSearch.toLowerCase();
-  var entries=q?allEntries.filter(function(h){return (h.descripcion||'').toLowerCase().includes(q)||getCatLabelGP(h).toLowerCase().includes(q);}):allEntries.slice();
+  var entries=q?allEntries.filter(function(h){return (h.descripcion||'').toLowerCase().includes(q)||h.categoria.toLowerCase().includes(q);}):allEntries.slice();
   entries.sort(function(a,b){if(_gpSort==='fecha-asc')return a.fecha<b.fecha?-1:1;if(_gpSort==='monto-desc')return b.monto-a.monto;if(_gpSort==='monto-asc')return a.monto-b.monto;return a.fecha>b.fecha?-1:1;});
   var totalE=entries.length;var ps=_gpSize||totalE;var totalP=ps?Math.max(1,Math.ceil(totalE/ps)):1;
   _gpPage=Math.min(_gpPage,totalP);var start=(_gpPage-1)*ps;var page=ps?entries.slice(start,start+ps):entries;
   var ctrl='<div class="list-controls"><input type="text" class="list-ctrl-input" id="gp-search" placeholder="🔍 Buscar..." value="'+(_gpSearch||'').replace(/"/g,'&quot;')+'"><select class="list-ctrl-select" id="gp-sort"><option value="fecha-desc"'+(_gpSort==='fecha-desc'?' selected':'')+'>📅 Reciente</option><option value="fecha-asc"'+(_gpSort==='fecha-asc'?' selected':'')+'>📅 Antiguo</option><option value="monto-desc"'+(_gpSort==='monto-desc'?' selected':'')+'>💰 Mayor</option><option value="monto-asc"'+(_gpSort==='monto-asc'?' selected':'')+'>💰 Menor</option></select><select class="list-ctrl-select" id="gp-size"><option value="10"'+(_gpSize===10?' selected':'')+'>10 filas</option><option value="20"'+(_gpSize===20?' selected':'')+'>20 filas</option><option value="0"'+(_gpSize===0?' selected':'')+'>Todas</option></select></div>';
-  var items=page.length?page.map(function(h){var tarj=h.tarjeta_id?A.tarjetas.find(function(t){return t.id===h.tarjeta_id;}):null;var catPrim=getCatGP(h);var catLabel=getCatLabelGP(h);return '<div class="gp-entry"><div style="width:30px;height:30px;border-radius:9px;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">'+catPrim.split(' ')[0]+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.84rem">'+(h.descripcion||catPrim)+'</div><div style="font-size:.68rem;color:#9ca3af">'+h.fecha+' · '+catLabel+(tarj?'</div><div style="margin-top:2px"><span class="tarjeta-chip" style="background:'+tarj.color+'">💳 '+tarj.banco+'</span>':'')+'</div></div><div style="font-weight:800;font-size:.88rem;color:#ef4444">'+fmt(h.monto)+'</div><button type="button" class="ibtn edit" data-action="editGP" data-id="'+h.id+'">✎</button><button type="button" class="ibtn" data-action="delGP" data-id="'+h.id+'">✕</button></div>';}).join(''):'<div style="padding:1rem;color:#9ca3af;font-size:.83rem">Sin resultados.</div>';
+  var items=page.length?page.map(function(h){var tarj=h.tarjeta_id?A.tarjetas.find(function(t){return t.id===h.tarjeta_id;}):null;return '<div class="gp-entry"><div style="width:30px;height:30px;border-radius:9px;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">'+h.categoria.split(' ')[0]+'</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.84rem">'+(h.descripcion||h.categoria)+'</div><div style="font-size:.68rem;color:#9ca3af">'+h.fecha+' · '+h.categoria+(tarj?'</div><div style="margin-top:2px"><span class="tarjeta-chip" style="background:'+tarj.color+'">💳 '+tarj.banco+'</span>':'')+'</div></div><div style="font-weight:800;font-size:.88rem;color:#ef4444">'+fmt(h.monto)+'</div><button type="button" class="ibtn edit" data-action="editGP" data-id="'+h.id+'">✎</button><button type="button" class="ibtn" data-action="delGP" data-id="'+h.id+'">✕</button></div>';}).join(''):'<div style="padding:1rem;color:#9ca3af;font-size:.83rem">Sin resultados.</div>';
   var pgbar=totalP>1?'<div class="pagination-bar"><button type="button" class="page-btn" id="gp-prev"'+(_gpPage<=1?' disabled':'')+'>◀</button><span style="min-width:80px;text-align:center">Pág '+_gpPage+' / '+totalP+' ('+totalE+')</span><button type="button" class="page-btn" id="gp-next"'+(_gpPage>=totalP?' disabled':'')+'>▶</button></div>':'';
   el('gp-list').innerHTML=ctrl+items+pgbar;
   var s=el('gp-search');if(s){s.addEventListener('input',function(){_gpSearch=this.value;_gpPage=1;renderPersonal(A.viewMes);});s.focus();s.setSelectionRange(s.value.length,s.value.length);}
@@ -947,7 +913,7 @@ function renderPersonal(mes){
   var pn=el('gp-next');if(pn)pn.addEventListener('click',function(){_gpPage++;renderPersonal(A.viewMes);});
   var total=allEntries.reduce(function(t,h){return t+h.monto;},0);
   el('gp-total-label').textContent='Resumen · '+mesLabel(mes)+' · '+fmt(total);
-  var cats={};allEntries.forEach(function(h){var c=getCatGP(h);cats[c]=(cats[c]||0)+h.monto;});
+  var cats={};allEntries.forEach(function(h){cats[h.categoria]=(cats[h.categoria]||0)+h.monto;});
   var sumHTML='<div style="padding:.5rem 1rem">';
   Object.keys(cats).sort(function(a,b){return cats[b]-cats[a];}).forEach(function(c){sumHTML+='<div style="display:flex;justify-content:space-between;font-size:.82rem;padding:6px 0;border-bottom:1px solid #f3f4f6"><span>'+c+'</span><span style="font-weight:700">'+fmt(cats[c])+'</span></div>';});
   if(!Object.keys(cats).length)sumHTML+='<div style="color:#9ca3af;font-size:.83rem;padding:.5rem 0">Sin categorías este mes</div>';
@@ -1172,7 +1138,7 @@ document.addEventListener('click',function(e){
     var gastosPers=A.gastosPersonales.filter(function(h){return mesFacturacionDeGP(h.fecha)===mes;});
     body+='<div style="font-size:.68rem;font-weight:800;color:#9ca3af;letter-spacing:.05em;margin-bottom:.3rem">GASTOS PERSONALES</div>';
     body+='<div class="card" style="padding:.5rem .8rem">';
-    if(gastosPers.length){gastosPers.forEach(function(h){var catP=getCatGP(h);var catLabelP=getCatLabelGP(h);body+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6"><div><div style="font-weight:700;font-size:.85rem">'+(h.descripcion||catP)+'</div><div style="font-size:.68rem;color:#9ca3af">'+catLabelP+'</div></div><span style="font-weight:800;color:#ef4444">'+fmt(h.monto)+'</span></div>';});}
+    if(gastosPers.length){gastosPers.forEach(function(h){body+='<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f3f4f6"><div><div style="font-weight:700;font-size:.85rem">'+(h.descripcion||h.categoria)+'</div><div style="font-size:.68rem;color:#9ca3af">'+h.categoria+'</div></div><span style="font-weight:800;color:#ef4444">'+fmt(h.monto)+'</span></div>';});}
     else{body+='<div style="font-size:.83rem;color:#9ca3af;padding:.4rem 0">Sin gastos personales</div>';}
     body+='</div>';
   }
