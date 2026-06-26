@@ -230,7 +230,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <input type="email" id="auth-email" placeholder="tu@email.com" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;margin-bottom:.5rem">
     <button type="button" class="btn" id="btn-email">Enviar link de acceso</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.72</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.74</div>
   </div>
 </div>
 
@@ -403,7 +403,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.72</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.74</span></footer>
 </div>
 
 <!-- MODAL CAMBIO DE MES AUTOMÁTICO -->
@@ -658,7 +658,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
 <script>
 var SB_URL='https://wqqzmdzfdxjbzazbuaee.supabase.co';
 var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndxcXptZHpmZHhqYnphemJ1YWVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3MzA3OTgsImV4cCI6MjA5NTMwNjc5OH0.DguFPdwLK7sz0IeZ_ph-ZCb6HBEI9ejwukf4hmGNMmU';
-var sb=supabase.createClient(SB_URL,SB_KEY,{auth:{flowType:'pkce',autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
+var sb=supabase.createClient(SB_URL,SB_KEY,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});
 var PALETTE=['#6c63ff','#ff6584','#43c6ac','#f7971e','#3b82f6','#ec4899','#10b981','#f59e0b'];
 var GP_CATS=['🍕 Comida','☕ Café','🚌 Transporte','🛍️ Compras','🎬 Ocio','💊 Salud','🍺 Entretención','📦 Otros'];
 var DEFAULT_CATS=['🍕 Comida','☕ Café','🚌 Transporte','🛍️ Compras','🎬 Ocio','💊 Salud','🍺 Entretención','⛽ Bencina','🛒 Supermercado','🏥 Médico','📦 Otros'];
@@ -1494,7 +1494,7 @@ el('btn-unirse-hogar').addEventListener('click',async function(){
   if(sueldo>0)await sb.from('sueldos').insert({miembro_id:m.data.id,hogar_id:h.data.id,mes:MES_HOY,monto:sueldo});
   await cargarDatos();
 });
-el('btn-google').addEventListener('click',function(){sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.href}});});
+el('btn-google').addEventListener('click',function(){sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin+'/'}});});
 el('btn-email').addEventListener('click',async function(){
   var email=el('auth-email').value.trim(),msg=el('auth-msg');
   if(!email){msg.textContent='Ingresa tu email';msg.style.color='#ef4444';return;}
@@ -1574,21 +1574,32 @@ async function cargarDatos(){
 }
 
 sb.auth.onAuthStateChange(async function(event,session){
-  if(window.location.hash&&window.location.hash.indexOf('access_token')<0)history.replaceState(null,'',window.location.pathname);
-  if(event==='INITIAL_SESSION'){
+  if(event==='SIGNED_OUT'){
+    _cargando=false;_initDone=false;A.user=null;A.miembro=null;
+    history.replaceState(null,'',window.location.pathname);
+    hideLoading();showScreen('auth');return;
+  }
+  if((event==='SIGNED_IN'||event==='INITIAL_SESSION')&&session&&session.user){
+    if(window.location.hash)history.replaceState(null,'',window.location.pathname);
     _initDone=true;
-    if(session&&session.user){A.user=session.user;if(window.location.hash)history.replaceState(null,'',window.location.pathname);await cargarDatos();}
-    else{hideLoading();showScreen('auth');}
+    if(el('screen-app').style.display==='block')return;
+    if(_cargando)return;
+    A.user=session.user;
+    await cargarDatos();
     return;
   }
-  if(event==='SIGNED_IN'&&session&&session.user){
-    if(window.location.hash)history.replaceState(null,'',window.location.pathname);
-    if(el('screen-app').style.display==='block')return;
-    if(!_initDone)return;
-    A.user=session.user;await cargarDatos();return;
+  if(event==='INITIAL_SESSION'&&(!session||!session.user)){
+    _initDone=true;
+    // Verificar si hay sesión activa que los eventos no detectaron (ej. PWA)
+    var sr=await sb.auth.getSession();
+    if(sr.data&&sr.data.session&&sr.data.session.user){
+      if(el('screen-app').style.display==='block')return;
+      A.user=sr.data.session.user;
+      await cargarDatos();
+    }else{
+      hideLoading();showScreen('auth');
+    }
   }
-  if(event==='SIGNED_OUT'){_cargando=false;_initDone=false;A.user=null;A.miembro=null;history.replaceState(null,'',window.location.pathname);hideLoading();showScreen('auth');return;}
-  if(el('screen-app').style.display==='block')return;
 });
 setTimeout(function(){if(!_initDone){hideLoading();showScreen('auth');}},10000);
 </script>
