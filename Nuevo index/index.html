@@ -239,7 +239,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <div style="font-size:.72rem;color:#9ca3af;margin-bottom:.6rem;text-align:left">Si tienes contraseña configurada, escríbela para entrar. Si no, deja el campo vacío y te enviamos un link.</div>
     <button type="button" class="btn" id="btn-email">Entrar con email</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.83</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.84</div>
   </div>
 </div>
 
@@ -397,6 +397,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
             <div class="gp-label">Tu saldo personal este mes</div>
             <div class="gp-saldo" id="gp-saldo">$0</div>
             <div class="gp-sub">Solo tú ves estos datos 🔒</div>
+            <div id="gp-reimb-pendientes" style="display:none;margin-top:.6rem;background:rgba(255,255,255,.15);border-radius:10px;padding:.5rem .8rem;font-size:.75rem;color:rgba(255,255,255,.9)"></div>
           </div>
           <div style="padding:.75rem 1rem;border-bottom:1px solid #f3f4f6"><button type="button" class="btn" style="background:#7c3aed;width:100%" id="btn-add-gp">+ Registrar gasto personal</button></div>
           <div id="gp-list"></div>
@@ -412,7 +413,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.83</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.84</span></footer>
 </div>
 
 <!-- MODAL GASTO -->
@@ -964,6 +965,20 @@ function renderGastos(mes){
 function renderPersonal(mes){
   var saldo=saldoPersonalMes(mes);
   el('gp-saldo').textContent=fmt(saldo);el('gp-saldo').style.color=saldo>=0?'#fff':'#fca5a5';
+  // Reembolsos pendientes de recibir (todos los meses, no solo el actual)
+  var reimbPend=(A.reembolsos||[]).filter(function(r){return r.recibido===false;});
+  var totalPend=reimbPend.reduce(function(t,r){return t+r.monto;},0);
+  var divPend=el('gp-reimb-pendientes');
+  if(divPend){
+    if(totalPend>0){
+      divPend.style.display='block';
+      divPend.innerHTML='⏳ Te deben: <strong>'+fmt(totalPend)+'</strong>'
+        +(reimbPend.length===1?' ('+reimbPend[0].concepto+')':' ('+reimbPend.length+' reembolsos pendientes)')
+        +'<br><span style="font-size:.68rem;opacity:.8">Con cobro: '+fmt(saldo+totalPend)+'</span>';
+    }else{
+      divPend.style.display='none';
+    }
+  }
   var allEntries=A.gastosPersonales.filter(function(h){return mesFacturacionDeGP(h.fecha)===mes;});
   var q=_gpSearch.toLowerCase();
   var entries=q?allEntries.filter(function(h){return (h.descripcion||'').toLowerCase().includes(q)||h.categoria.toLowerCase().includes(q);}):allEntries.slice();
