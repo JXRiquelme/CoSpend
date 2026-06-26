@@ -239,7 +239,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <div style="font-size:.72rem;color:#9ca3af;margin-bottom:.6rem;text-align:left">Si tienes contraseña configurada, escríbela para entrar. Si no, deja el campo vacío y te enviamos un link.</div>
     <button type="button" class="btn" id="btn-email">Entrar con email</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.80</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.81</div>
   </div>
 </div>
 
@@ -412,7 +412,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.80</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.81</span></footer>
 </div>
 
 <!-- MODAL GASTO -->
@@ -928,11 +928,21 @@ function renderGastos(mes){
   var gsi=el('g-size');if(gsi)gsi.addEventListener('change',function(){_gSize=parseInt(this.value);_gPage=1;renderGastos(A.viewMes);});
   var gpv=el('g-prev');if(gpv)gpv.addEventListener('click',function(){_gPage--;renderGastos(A.viewMes);});
   var gpn=el('g-next');if(gpn)gpn.addEventListener('click',function(){_gPage++;renderGastos(A.viewMes);});
-  // Resumen por tarjeta (gastos hogar)
-  var tarjMap={};gdm.forEach(function(x){if(x.tarjeta_id){tarjMap[x.tarjeta_id]=(tarjMap[x.tarjeta_id]||0)+x.monto;}});
+  // Resumen por tarjeta: siempre sobre TODOS los gastos del mes, no solo la página visible
+  var todosGdm=A.gastos.filter(function(g){return gastoEnMes(g,mes);});
+  var tarjMap={};todosGdm.forEach(function(x){if(x.tarjeta_id){tarjMap[x.tarjeta_id]=(tarjMap[x.tarjeta_id]||0)+montoGastoEnMes(x,mes);}});
   var tarjKeys=Object.keys(tarjMap);
   var sec=el('g-tarjetas-section');sec.style.display=tarjKeys.length?'block':'none';
-  if(tarjKeys.length){var rhtml='';tarjKeys.forEach(function(tid){var t=A.tarjetas.find(function(x){return x.id===tid;});if(!t)return;rhtml+='<div class="tarjeta-panel-card"><div class="tarjeta-panel-strip" style="background:'+t.color+'"></div><div class="tarjeta-panel-body"><div style="font-weight:800;font-size:.88rem">'+t.banco+'</div>'+(t.nombre?'<div style="font-size:.68rem;color:#9ca3af;margin-top:1px">'+t.nombre+'</div>':'')+'</div><div class="tarjeta-panel-monto">'+fmt(tarjMap[tid])+'</div></div>';});el('g-tarjetas-resumen').innerHTML=rhtml;}
+  if(tarjKeys.length){
+    var rhtml='';
+    tarjKeys.forEach(function(tid){
+      var t=A.tarjetas.find(function(x){return x.id===tid;});if(!t)return;
+      var pagadoTarj=todosGdm.filter(function(x){return x.tarjeta_id===tid&&esPagado(x,mes);}).reduce(function(s,x){return s+montoGastoEnMes(x,mes);},0);
+      var pendTarj=todosGdm.filter(function(x){return x.tarjeta_id===tid&&!esPagado(x,mes);}).reduce(function(s,x){return s+montoGastoEnMes(x,mes);},0);
+      rhtml+='<div class="tarjeta-panel-card"><div class="tarjeta-panel-strip" style="background:'+t.color+'"></div><div class="tarjeta-panel-body"><div style="font-weight:800;font-size:.88rem">'+t.banco+'</div>'+(t.nombre?'<div style="font-size:.68rem;color:#9ca3af;margin-top:1px">'+t.nombre+'</div>':'')+'</div><div class="tarjeta-panel-monto">'+fmt(tarjMap[tid])+'</div>'+(pagadoTarj>0||pendTarj>0?'<div style="padding:0 .9rem .6rem;font-size:.68rem;color:#9ca3af">'+(pagadoTarj>0?'<span style="color:#15803d">✓ '+fmt(pagadoTarj)+'</span>':'')+(pagadoTarj>0&&pendTarj>0?' · ':'')+(pendTarj>0?'<span style="color:#d97706">⏳ '+fmt(pendTarj)+'</span>':'')+'</div>':'')+'</div>';
+    });
+    el('g-tarjetas-resumen').innerHTML=rhtml;
+  }
 }
 
 function renderPersonal(mes){
