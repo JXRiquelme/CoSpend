@@ -230,7 +230,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <input type="email" id="auth-email" placeholder="tu@email.com" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;margin-bottom:.5rem">
     <button type="button" class="btn" id="btn-email">Enviar link de acceso</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.71</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.70</div>
   </div>
 </div>
 
@@ -403,7 +403,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.71</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.70</span></footer>
 </div>
 
 <!-- MODAL CAMBIO DE MES AUTOMÁTICO -->
@@ -857,7 +857,6 @@ function brow(label,val,color,bold){return '<div class="balance-row"><span style
 
 function render(){
   var mes=A.viewMes;
-  if(!A.hogar||!A.miembros)return; // guard: datos aún no cargados
   buildMesSelect();
   el('mes-label').textContent=mesLabel(mes);
   if(A.hogar){el('app-hogar-nombre').textContent=A.hogar.nombre;el('invite-code').textContent=A.hogar.codigo_invitacion||'——';}
@@ -871,11 +870,11 @@ function render(){
     var diff=ideal-real,pctBar=ideal>0?Math.min(100,real/ideal*100):0;
     distHTML+='<div style="padding:.9rem 1rem;border-bottom:1px solid #e5e7eb"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px"><div><div style="font-weight:800;font-size:.92rem;display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:'+m.color+';display:inline-block"></span>'+m.nombre+'</div><div style="font-size:.7rem;color:#6b7280">'+fmt(s)+' · '+Math.round(prop*100)+'% del hogar</div></div><div style="text-align:right"><div style="font-size:.7rem;color:#6b7280">Ideal: '+fmt(ideal)+'</div><div style="font-weight:800;font-size:.88rem">'+fmt(real)+'</div><div style="font-size:.72rem;font-weight:700;color:'+(diff>=0?'#15803d':'#dc2626')+'">'+(diff>=0?'↓ ahorra ':'↑ excede ')+fmt(Math.abs(diff))+'</div></div></div><div class="bar-track"><div class="bar-fill" style="width:'+pctBar+'%;background:'+(diff>=0?'#22c55e':'#ef4444')+'"></div></div></div>';
   });
-  if(el('r-dist'))el('r-dist').innerHTML=distHTML||'<div style="padding:1rem;color:#9ca3af">Sin miembros</div>';
+  el('r-dist').innerHTML=distHTML||'<div style="padding:1rem;color:#9ca3af">Sin miembros</div>';
   var gm=A.gastos.filter(function(g){return gastoEnMes(g,mes)&&g.monto>0;}),mp=gm.filter(function(g){return esPagado(g,mes);}).reduce(function(t,g){return t+g.monto;},0),mpend=gm.filter(function(g){return !esPagado(g,mes);}).reduce(function(t,g){return t+g.monto;},0);
-  if(el('r-estado'))el('r-estado').innerHTML='<div class="estado-card paid"><div class="el">✅ Pagados</div><div class="ev">'+fmt(mp)+'</div></div><div class="estado-card pend"><div class="el">⏳ Pendientes</div><div class="ev">'+fmt(mpend)+'</div></div>';
+  el('r-estado').innerHTML='<div class="estado-card paid"><div class="el">✅ Pagados</div><div class="ev">'+fmt(mp)+'</div></div><div class="estado-card pend"><div class="el">⏳ Pendientes</div><div class="ev">'+fmt(mpend)+'</div></div>';
   var ts2=totalSueldosMes(mes),tr=totalReembsMes(mes),oi=totalOtrosHogarMes(mes);
-  if(el('r-balance'))el('r-balance').innerHTML=brow('Sueldos',fmt(ts2),'#6c63ff')+(tr>0?brow('Reembolsos','+ '+fmt(tr),'#0e7490'):'')+(oi>0?brow('Otros ingresos','+ '+fmt(oi),'#15803d'):'')+brow('Total ingresos',fmt(ti),'#6c63ff')+brow('Total gastos',fmt(tg),'#ef4444')+(A.metaAhorro>0?brow('Ahorro conjunto','- '+fmt(A.metaAhorro),'#f59e0b'):'')+brow('Resto del mes',fmt(sobra-A.metaAhorro),sobra-A.metaAhorro>=0?'#22c55e':'#ef4444',true);
+  el('r-balance').innerHTML=brow('Sueldos',fmt(ts2),'#6c63ff')+(tr>0?brow('Reembolsos','+ '+fmt(tr),'#0e7490'):'')+(oi>0?brow('Otros ingresos','+ '+fmt(oi),'#15803d'):'')+brow('Total ingresos',fmt(ti),'#6c63ff')+brow('Total gastos',fmt(tg),'#ef4444')+(A.metaAhorro>0?brow('Ahorro conjunto','- '+fmt(A.metaAhorro),'#f59e0b'):'')+brow('Resto del mes',fmt(sobra-A.metaAhorro),sobra-A.metaAhorro>=0?'#22c55e':'#ef4444',true);
   renderGastos(mes);renderPersonal(mes);
   var activeTab=document.querySelector('.tab.active');
   var tabName=activeTab?activeTab.dataset.tab:'resumen';
@@ -1575,46 +1574,23 @@ async function cargarDatos(){
 }
 
 sb.auth.onAuthStateChange(async function(event,session){
+  if(window.location.hash&&window.location.hash.indexOf('access_token')<0)history.replaceState(null,'',window.location.pathname);
   if(event==='INITIAL_SESSION'){
     _initDone=true;
-    if(session&&session.user){
-      A.user=session.user;
-      // Limpiar hash de la URL solo después de que la sesión esté procesada
-      if(window.location.hash)history.replaceState(null,'',window.location.pathname);
-      await cargarDatos();
-    }else{
-      // Si hay hash con access_token, esperar a que Supabase lo procese
-      if(window.location.hash&&window.location.hash.indexOf('access_token')>=0){
-        // Supabase procesará el token y disparará SIGNED_IN
-        return;
-      }
-      hideLoading();showScreen('auth');
-    }
+    if(session&&session.user){A.user=session.user;if(window.location.hash)history.replaceState(null,'',window.location.pathname);await cargarDatos();}
+    else{hideLoading();showScreen('auth');}
     return;
   }
   if(event==='SIGNED_IN'&&session&&session.user){
     if(window.location.hash)history.replaceState(null,'',window.location.pathname);
     if(el('screen-app').style.display==='block')return;
+    if(!_initDone)return;
     A.user=session.user;await cargarDatos();return;
   }
   if(event==='SIGNED_OUT'){_cargando=false;_initDone=false;A.user=null;A.miembro=null;history.replaceState(null,'',window.location.pathname);hideLoading();showScreen('auth');return;}
+  if(el('screen-app').style.display==='block')return;
 });
-// Fallback: si en 10s no se inicializó (ej. PWA offline o error de red)
-setTimeout(function(){
-  if(!_initDone){
-    _initDone=true;
-    hideLoading();
-    // Intentar recuperar sesión manualmente antes de mostrar auth
-    sb.auth.getSession().then(function(res){
-      if(res.data&&res.data.session&&res.data.session.user){
-        A.user=res.data.session.user;
-        cargarDatos();
-      }else{
-        showScreen('auth');
-      }
-    }).catch(function(){showScreen('auth');});
-  }
-},10000);
+setTimeout(function(){if(!_initDone){hideLoading();showScreen('auth');}},10000);
 </script>
 </body>
 </html>
