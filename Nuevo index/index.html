@@ -1873,19 +1873,60 @@ async function generarRecomendaciones(tipo,catFoco){
     +foco+'\n\n'
     +'Responde SOLO con JSON válido sin markdown:\n{"recomendaciones":[{"emoji":"🎯","color":"amber","titulo":"Título max 6 palabras","texto":"2-3 oraciones concretas con montos en pesos chilenos."}]}\n'
     +'Colores: amber=advertencia, green=positivo, red=urgente, purple=oportunidad.';
+  // Generar recomendaciones localmente basadas en los datos reales
   try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
-    var data=await resp.json();
-    var text=(data.content||[]).map(function(i){return i.text||'';}).join('');
-    var parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
-    var recs=parsed.recomendaciones||[];
+    var recs=generarRecsLocales(tipo,catFoco,{ti:ti,tg:tg,sobra:sobra,saldoP:saldoP,catsH:catsH,catsP:catsP,hist:hist,nombre:nombre,mes:mes});
     var titulo=tipo==='cat-h'?'🏠 '+catFoco:tipo==='cat-p'?'👤 '+catFoco:'🔍 Análisis completo';
-    cont.innerHTML='<div style="font-size:.72rem;color:#9ca3af;margin-bottom:.8rem;display:flex;justify-content:space-between;align-items:center"><span>'+titulo+' · '+mesLabel(mes)+'</span></div>'
+    cont.innerHTML='<div style="font-size:.72rem;color:#9ca3af;margin-bottom:.8rem"><span>'+titulo+' · '+mesLabel(mes)+'</span></div>'
       +recs.map(function(r){return '<div class="rec-card '+(r.color||'amber')+'"><div class="rec-titulo">'+r.emoji+' '+r.titulo+'</div><div class="rec-body">'+r.texto+'</div></div>';}).join('')
       +(recs.length===0?'<div style="color:#9ca3af;text-align:center;padding:1rem">Sin resultados.</div>':'');
   }catch(err){
     cont.innerHTML='<div style="padding:1rem;text-align:center"><div style="color:#ef4444;margin-bottom:.8rem">Error al generar consejos.</div><button type="button" class="btn-save" onclick="generarRecomendaciones(\''+tipo+'\',\''+encodeURIComponent(catFoco||'')+'\')">Reintentar</button></div>';
   }
+}
+
+function generarRecsLocales(tipo,catFoco,d){
+  var recs=[];
+  var pct=d.tg>0?Math.round(d.tg/d.ti*100):0;
+  var catHKeys=Object.keys(d.catsH).sort(function(a,b){return d.catsH[b]-d.catsH[a];});
+  var catPKeys=Object.keys(d.catsP).sort(function(a,b){return d.catsP[b]-d.catsP[a];});
+
+  if(tipo==='general'){
+    // Análisis de salud financiera general
+    if(pct>85)recs.push({emoji:'🚨',color:'red',titulo:'Gastos muy elevados este mes',texto:'Estás usando el '+pct+'% de tus ingresos en gastos del hogar ('+fmt(d.tg)+' de '+fmt(d.ti)+'). Lo ideal es mantenerlo bajo el 80%. Revisa qué categorías puedes recortar el próximo mes.'});
+    else if(pct>70)recs.push({emoji:'⚠️',color:'amber',titulo:'Gastos sobre el 70% de tus ingresos',texto:'Llevas el '+pct+'% de ingresos gastado ('+fmt(d.tg)+'). Tienes un margen ajustado de '+fmt(d.sobra)+'. Trata de mantener este nivel o reducirlo el próximo mes.'});
+    else recs.push({emoji:'✅',color:'green',titulo:'Salud financiera positiva',texto:'Llevas el '+pct+'% de ingresos en gastos ('+fmt(d.tg)+'), lo que deja un disponible de '+fmt(d.sobra)+'. ¡Buen manejo este mes!'});
+    // Categoría más cara
+    if(catHKeys.length>0){var top=catHKeys[0];var topPct=Math.round(d.catsH[top]/d.tg*100);recs.push({emoji:'💸',color:topPct>30?'amber':'purple',titulo:top+' es tu mayor gasto',texto:'La categoría "'+top+'" representa el '+topPct+'% de tus gastos del hogar con '+fmt(d.catsH[top])+'. '+(topPct>30?'Analiza si hay margen para reducir o negociar algún ítem de esta categoría.':'Está dentro de rangos razonables.')});}
+    // Saldo personal
+    if(d.saldoP>0)recs.push({emoji:'💰',color:'green',titulo:'Tienes saldo personal disponible',texto:'Tu saldo personal este mes es '+fmt(d.saldoP)+'. Considera destinar parte al ahorro o a un fondo de emergencia si aún no tienes uno.'});
+    else recs.push({emoji:'🔴',color:'red',titulo:'Saldo personal negativo',texto:'Tu saldo personal está en '+fmt(d.saldoP)+'. Los gastos del hogar superan lo que te corresponde. Revisa si hay gastos que puedas diferir o reducir.'});
+    // Comparación histórica
+    if(d.hist.length>0){var mesAnterior=d.hist[0];if(mesAnterior.hogar>0){var diff=d.tg-mesAnterior.hogar;var diffPct=Math.round(Math.abs(diff)/mesAnterior.hogar*100);if(diff>0)recs.push({emoji:'📈',color:'amber',titulo:'Gastos subieron vs mes anterior',texto:'Este mes gastas '+fmt(diff)+' más que en '+mesAnterior.mes+' ('+diffPct+'% de aumento). Revisa qué categorías aumentaron para tenerlas controladas el próximo mes.'});else if(diff<0)recs.push({emoji:'📉',color:'green',titulo:'Gastos bajaron vs mes anterior',texto:'Gastaste '+fmt(Math.abs(diff))+' menos que en '+mesAnterior.mes+' ('+diffPct+'% de reducción). Buen trabajo controlando los gastos este mes.'});}}
+    // Recomendación de ahorro
+    if(d.sobra>0){var ahorroSug=Math.round(d.sobra*0.2);recs.push({emoji:'🏦',color:'purple',titulo:'Oportunidad de ahorro',texto:'Del disponible de '+fmt(d.sobra)+', podrías destinar '+fmt(ahorroSug)+' al ahorro (20%). Configura una meta de ahorro en la pestaña Ahorro para hacerlo automático cada mes.'});}
+  } else if(tipo==='cat-h'&&catFoco){
+    var monto=d.catsH[catFoco]||0;
+    var pctCat=d.tg>0?Math.round(monto/d.tg*100):0;
+    var gastosCat=A.gastos.filter(function(g){return gastoEnMes(g,A.viewMes)&&parseCats(g.categorias||'').indexOf(catFoco)>=0;});
+    recs.push({emoji:'🔍',color:'purple',titulo:'Resumen de '+catFoco,texto:'Tienes '+gastosCat.length+' gasto(s) en esta categoría por un total de '+fmt(monto)+', que representa el '+pctCat+'% de tu presupuesto del hogar.'});
+    if(pctCat>25)recs.push({emoji:'⚠️',color:'amber',titulo:'Categoría de alto impacto',texto:'"'+catFoco+'" consume más de la cuarta parte de tu presupuesto. Analiza ítem por ítem si todos son necesarios o si alguno se puede renegociar o eliminar.'});
+    var fijos=gastosCat.filter(function(g){return g.fijo;});
+    var variables=gastosCat.filter(function(g){return !g.fijo;});
+    if(fijos.length>0&&variables.length>0)recs.push({emoji:'📊',color:'amber',titulo:'Mezcla de gastos fijos y variables',texto:'Tienes '+fijos.length+' gasto(s) fijo(s) y '+variables.length+' variable(s) en esta categoría. Los fijos son compromisos ineludibles; enfócate en reducir los variables.'});
+    if(fijos.length>0)recs.push({emoji:'🔒',color:'green',titulo:'Gastos fijos identificados',texto:'Los gastos fijos de "'+catFoco+'" suman '+fmt(fijos.reduce(function(t,g){return t+g.monto;},0))+'. Recuerda marcarlos como pagados cada mes para tener el seguimiento actualizado.'});
+    var sinTag=gastosCat.filter(function(g){return !g.tarjeta_id;});
+    if(sinTag.length>0)recs.push({emoji:'💳',color:'amber',titulo:'Gastos sin tarjeta asignada',texto:'Hay '+sinTag.length+' gasto(s) en "'+catFoco+'" sin tarjeta de pago asignada. Asígnalos para que el resumen por tarjeta sea más preciso.'});
+  } else if(tipo==='cat-p'&&catFoco){
+    var montoP=d.catsP[catFoco]||0;
+    var gastosPC=A.gastosPersonales.filter(function(h){return mesFacturacionDeGP(h.fecha)===A.viewMes&&getCatGP(h)===catFoco;});
+    recs.push({emoji:'🔍',color:'purple',titulo:'Resumen personal de '+catFoco,texto:'Registraste '+gastosPC.length+' gasto(s) personal(es) en "'+catFoco+'" por '+fmt(montoP)+' este mes.'});
+    if(gastosPC.length>3)recs.push({emoji:'📅',color:'amber',titulo:'Frecuencia alta de gastos',texto:'Tienes '+gastosPC.length+' registros en esta categoría. Evalúa si puedes consolidar o reducir la frecuencia de estos gastos para tener más control.'});
+    var pctSaldo=d.saldoP>0?Math.round(montoP/d.saldoP*100):100;
+    if(pctSaldo>20)recs.push({emoji:'⚠️',color:pctSaldo>40?'red':'amber',titulo:catFoco+' pesa en tu saldo personal',texto:'"'+catFoco+'" representa el '+pctSaldo+'% de tu saldo personal disponible. '+(pctSaldo>40?'Considera ponerle un límite mensual a esta categoría.':'Está en un rango aceptable pero vigílalo.')});
+    else recs.push({emoji:'✅',color:'green',titulo:'Gasto bajo control',texto:'"'+catFoco+'" representa solo el '+pctSaldo+'% de tu saldo personal. Buen control en esta área.'});
+  }
+  return recs;
 }
 
 var TARJETA_PALETTE=['#1a1a2e','#6c63ff','#ef4444','#22c55e','#f59e0b','#3b82f6','#ec4899','#0e7490','#7c3aed','#f97316'];
