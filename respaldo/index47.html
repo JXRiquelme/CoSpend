@@ -177,13 +177,7 @@ main{max-width:700px;margin:0 auto;padding:.9rem .9rem 5rem}
 @supports (-webkit-touch-callout: none){
   input,select,textarea{font-size:16px !important;}
 }
-.rec-card{background:#fff;border-radius:14px;padding:1rem;box-shadow:0 4px 24px rgba(108,99,255,.08);margin-bottom:.9rem;border-left:4px solid #6c63ff}
-.rec-card.amber{border-left-color:#f59e0b}
-.rec-card.green{border-left-color:#22c55e}
-.rec-card.red{border-left-color:#ef4444}
-.rec-card.purple{border-left-color:#7c3aed}
-.rec-titulo{font-weight:800;font-size:.9rem;margin-bottom:.4rem;display:flex;align-items:center;gap:7px}
-.rec-body{font-size:.82rem;color:#4b5563;line-height:1.55}
+footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
 .tab-pane{display:none}
 .tab-pane.active{display:block}
 .sub-tab{flex:1;background:#fff;border:2px solid #e5e7eb;border-radius:14px;padding:.65rem .5rem;cursor:pointer;text-align:center;transition:all .15s;font-family:inherit;color:#6b7280}
@@ -300,7 +294,6 @@ main{max-width:700px;margin:0 auto;padding:.9rem .9rem 5rem}
     <button type="button" class="tab" data-tab="ingresos">💵 Ingresos</button>
     <button type="button" class="tab" data-tab="hogar">🏠 Gestión Hogar</button>
     <button type="button" class="tab" data-tab="gestion-personal">💰 Gestión Personal</button>
-    <button type="button" class="tab" data-tab="recomendaciones">✨ Consejos</button>
   </div>
   <main>
     <!-- RESUMEN -->
@@ -420,21 +413,8 @@ main{max-width:700px;margin:0 auto;padding:.9rem .9rem 5rem}
         </div>
       </div>
     </div>
-    <!-- RECOMENDACIONES -->
-    <div class="tab-pane" id="pane-recomendaciones">
-      <div style="padding-top:.75rem"></div>
-      <div class="card" style="padding:1rem;margin-bottom:1rem;background:linear-gradient(135deg,#6c63ff11,#a78bfa11);border:1.5px solid #c4b5fd">
-        <div style="font-size:.78rem;color:#5b21b6;line-height:1.5">✨ <strong>Consejos personalizados</strong> basados en tus gastos de este mes. Generados por IA analizando tus categorías y patrones.</div>
-      </div>
-      <div id="rec-content">
-        <div style="text-align:center;padding:2rem 1rem">
-          <button type="button" class="btn" id="btn-generar-rec" style="background:#6c63ff;max-width:280px;margin:0 auto">✨ Generar recomendaciones</button>
-          <div style="font-size:.75rem;color:#9ca3af;margin-top:.8rem">Analiza tus gastos del mes actual</div>
-        </div>
-      </div>
-    </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.87</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.86</span></footer>
 </div>
 
 <!-- MODAL GASTO -->
@@ -896,6 +876,7 @@ function setSubTab(btn,contentId,tabName){
 function setTab(name){
   document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===name);});
   document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.toggle('active',p.id==='pane-'+name);});
+  // Reset sub-tabs to default on enter
   if(name==='hogar'){['gastos-content','ahorro-hogar-content','proyeccion-content'].forEach(function(id){var e=el(id);if(e)e.style.display='none';});var btns=el('pane-hogar').querySelectorAll('.sub-tab');btns.forEach(function(b){b.classList.toggle('active',b.dataset.sub==='gastos');});el('gastos-content').style.display='block';}
   if(name==='gestion-personal'){['saldo-content','ahorro-pers-content','proyeccion-pers-content'].forEach(function(id){var e=el(id);if(e)e.style.display='none';});var btns2=el('pane-gestion-personal').querySelectorAll('.sub-tab');btns2.forEach(function(b){b.classList.toggle('active',b.dataset.sub==='saldo');});el('saldo-content').style.display='block';renderProyeccionPersonal(A.viewMes);}
   if(name==='ingresos')renderIngresos(A.viewMes);
@@ -968,7 +949,7 @@ function renderGastos(mes){
   var ctrlG='<div class="list-controls"><input type="text" class="list-ctrl-input" id="g-search" placeholder="🔍 Buscar..." value="'+(_gSearch||'').replace(/"/g,'&quot;')+'"><select class="list-ctrl-select" id="g-sort"><option value="default"'+(_gSort==='default'?' selected':'')+'>📅 Por defecto</option><option value="monto-desc"'+(_gSort==='monto-desc'?' selected':'')+'>💰 Mayor monto</option><option value="monto-asc"'+(_gSort==='monto-asc'?' selected':'')+'>💰 Menor monto</option><option value="nombre-asc"'+(_gSort==='nombre-asc'?' selected':'')+'>🔤 Nombre</option></select><select class="list-ctrl-select" id="g-size"><option value="10"'+(_gSize===10?' selected':'')+'>10 filas</option><option value="20"'+(_gSize===20?' selected':'')+'>20 filas</option><option value="0"'+(_gSize===0?' selected':'')+'>Todas</option></select></div>';
   var pgbarG=totalPG>1?'<div class="pagination-bar"><button type="button" class="page-btn" id="g-prev"'+(_gPage<=1?' disabled':'')+'>◀</button><span style="min-width:80px;text-align:center">Pág '+_gPage+' / '+totalPG+' ('+totalG+')</span><button type="button" class="page-btn" id="g-next"'+(_gPage>=totalPG?' disabled':'')+'>▶</button></div>':'';
   el('g-list').innerHTML=ctrlG+(html||'<div style="padding:1.5rem;text-align:center;color:#9ca3af">No hay gastos este mes.</div>')+pgbarG;
-  var gs=el('g-search');if(gs){gs.addEventListener('input',function(){_gSearch=this.value;_gPage=1;renderGastos(A.viewMes);});if(document.activeElement&&document.activeElement.id==='g-search'){gs.focus();gs.setSelectionRange(gs.value.length,gs.value.length);}}
+  var gs=el('g-search');if(gs){gs.addEventListener('input',function(){_gSearch=this.value;_gPage=1;renderGastos(A.viewMes);});gs.focus();gs.setSelectionRange(gs.value.length,gs.value.length);}
   var gso=el('g-sort');if(gso)gso.addEventListener('change',function(){_gSort=this.value;_gPage=1;renderGastos(A.viewMes);});
   var gsi=el('g-size');if(gsi)gsi.addEventListener('change',function(){_gSize=parseInt(this.value);_gPage=1;renderGastos(A.viewMes);});
   var gpv=el('g-prev');if(gpv)gpv.addEventListener('click',function(){_gPage--;renderGastos(A.viewMes);});
@@ -1393,30 +1374,7 @@ document.addEventListener('click',function(e){
   el('modal-proj-detail').classList.add('open');
 });
 
-async function doTogglePago(gastoId,mes){
-  var g=A.gastos.find(function(x){return x.id===gastoId;});if(!g)return;
-  var existing=A.pagos.find(function(p){return p.gasto_id===gastoId&&p.mes===mes;});
-  if(existing){var r=await sb.from('pagos').update({pagado:!existing.pagado}).eq('id',existing.id).select().single();if(!r.error)existing.pagado=r.data.pagado;}
-  else{var r2=await sb.from('pagos').insert({gasto_id:gastoId,hogar_id:A.hogar.id,mes:mes,pagado:true}).select().single();if(!r2.error)A.pagos.push(r2.data);}
-  // Actualizar solo la fila afectada sin re-renderizar toda la lista
-  var pagado=esPagado(g,mes);
-  var rowEl=document.querySelector('[data-action="togglePago"][data-id="'+gastoId+'"]');
-  if(rowEl){
-    var rowDiv=rowEl.closest('.row');
-    if(rowDiv){
-      rowDiv.style.background=pagado?'#f0fdf4':'#fefce8';
-      rowDiv.style.borderLeftColor=pagado?'#22c55e':'#f59e0b';
-      var badge=rowDiv.querySelector('.badge-paid,.badge-pend');
-      if(badge){badge.className='badge '+(pagado?'badge-paid':'badge-pend');badge.textContent=pagado?'✓ pagado':'⏳ pendiente';}
-    }
-  }
-  // Actualizar métricas y balance sin saltar
-  var ti=totalIngresosMes(mes),tg=totalGastosMes(mes),sobra=ti-tg,pct=ti>0?Math.round(tg/ti*100):0;
-  if(el('r-metrics'))el('r-metrics').innerHTML=metricHTML('Ingresos',fmt(ti),'purple')+metricHTML('Gastos',fmt(tg),'red')+metricHTML('Disponible',fmt(sobra),sobra>=0?'green':'red')+metricHTML('% ingreso',pct+'%',pct>85?'red':pct>70?'amber':'green');
-  var gm=A.gastos.filter(function(gg){return gastoEnMes(gg,mes)&&gg.monto>0;}),mp=gm.filter(function(gg){return esPagado(gg,mes);}).reduce(function(t,gg){return t+gg.monto;},0),mpend=gm.filter(function(gg){return !esPagado(gg,mes);}).reduce(function(t,gg){return t+gg.monto;},0);
-  if(el('r-estado'))el('r-estado').innerHTML='<div class="estado-card paid"><div class="el">✅ Pagados</div><div class="ev">'+fmt(mp)+'</div></div><div class="estado-card pend"><div class="el">⏳ Pendientes</div><div class="ev">'+fmt(mpend)+'</div></div>';
-  if(el('gp-saldo')){var saldo=saldoPersonalMes(mes);el('gp-saldo').textContent=fmt(saldo);el('gp-saldo').style.color=saldo>=0?'#fff':'#fca5a5';}
-}
+async function doTogglePago(gastoId,mes){var g=A.gastos.find(function(x){return x.id===gastoId;});if(!g)return;var existing=A.pagos.find(function(p){return p.gasto_id===gastoId&&p.mes===mes;});if(existing){var r=await sb.from('pagos').update({pagado:!existing.pagado}).eq('id',existing.id).select().single();if(!r.error)existing.pagado=r.data.pagado;}else{var r2=await sb.from('pagos').insert({gasto_id:gastoId,hogar_id:A.hogar.id,mes:mes,pagado:true}).select().single();if(!r2.error)A.pagos.push(r2.data);}render();}
 function openMoveGastoModal(gastoId){
   var g=A.gastos.find(function(x){return x.id===gastoId;});if(!g)return;
   A._moveGastoId=gastoId;
@@ -1820,41 +1778,6 @@ el('btn-email').addEventListener('click',async function(){
     else{msg.textContent='Link enviado. Revisa tu correo.';msg.style.color='#22c55e';}
   }
 });
-
-// ===== RECOMENDACIONES IA =====
-document.addEventListener('click',function(e){if(e.target&&e.target.id==='btn-generar-rec')generarRecomendaciones();});
-async function generarRecomendaciones(){
-  var cont=el('rec-content');
-  cont.innerHTML='<div style="text-align:center;padding:2rem"><div class="spinner" style="margin:0 auto .8rem"></div><div style="font-size:.82rem;color:#6b7280">Analizando tus gastos...</div></div>';
-  var mes=A.viewMes;
-  var ti=totalIngresosMes(mes),tg=totalGastosMes(mes),sobra=ti-tg;
-  var saldoP=saldoPersonalMes(mes);
-  var gastosP=A.gastosPersonales.filter(function(h){return mesFacturacionDeGP(h.fecha)===mes;});
-  var catsP={};gastosP.forEach(function(h){var c=getCatGP(h);catsP[c]=(catsP[c]||0)+h.monto;});
-  var gastosH=A.gastos.filter(function(g){return gastoEnMes(g,mes);});
-  var catsH={};gastosH.forEach(function(g){var cats=parseCats(g.categorias||'');if(!cats.length)return;cats.forEach(function(c){catsH[c]=(catsH[c]||0)+montoGastoEnMes(g,mes);});});
-  var hist=[];for(var i=1;i<=3;i++){var m2=addMes(mes,-i);var tgH=A.gastos.filter(function(g){return gastoEnMes(g,m2);}).reduce(function(t,g){return t+g.monto;},0);var gpH=A.gastosPersonales.filter(function(h){return mesFacturacionDeGP(h.fecha)===m2;}).reduce(function(t,h){return t+h.monto;},0);hist.push({mes:mesLabel(m2),hogar:tgH,personal:gpH});}
-  var nombre=A.miembro?A.miembro.nombre:'usuario';
-  var prompt='Eres un asesor financiero personal amigable para '+nombre+'. Analiza estos datos de '+mesLabel(mes)+' y genera 4 a 6 recomendaciones concretas en español chileno informal.\n\n'
-    +'INGRESOS TOTALES: '+fmt(ti)+'\nGASTOS HOGAR: '+fmt(tg)+'\nDISPONIBLE: '+fmt(sobra)+'\nSALDO PERSONAL: '+fmt(saldoP)+'\n\n'
-    +'GASTOS HOGAR POR CATEGORÍA:\n'+Object.keys(catsH).sort(function(a,b){return catsH[b]-catsH[a];}).map(function(c){return '- '+c+': '+fmt(catsH[c])+' ('+(Math.round(catsH[c]/tg*100))+'% del total)';}).join('\n')+'\n\n'
-    +(Object.keys(catsP).length?'GASTOS PERSONALES POR CATEGORÍA:\n'+Object.keys(catsP).sort(function(a,b){return catsP[b]-catsP[a];}).map(function(c){return '- '+c+': '+fmt(catsP[c]);}).join('\n')+'\n\n':'')
-    +'HISTÓRICO:\n'+hist.map(function(h){return '- '+h.mes+': hogar '+fmt(h.hogar)+(h.personal>0?', personal '+fmt(h.personal):'');}).join('\n')+'\n\n'
-    +'Responde SOLO con JSON válido sin markdown:\n{"recomendaciones":[{"emoji":"🎯","color":"amber","titulo":"Título corto","texto":"2-3 oraciones con montos específicos en pesos chilenos."}]}\n'
-    +'Colores: amber=advertencia, green=positivo, red=urgente, purple=oportunidad.';
-  try{
-    var resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,messages:[{role:'user',content:prompt}]})});
-    var data=await resp.json();
-    var text=(data.content||[]).map(function(i){return i.text||'';}).join('');
-    var parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
-    var recs=parsed.recomendaciones||[];
-    cont.innerHTML='<div style="margin-bottom:.8rem;font-size:.72rem;color:#9ca3af;display:flex;justify-content:space-between;align-items:center">Basado en '+mesLabel(mes)+'<button type="button" class="small-btn" id="btn-regenerar-rec" style="font-size:.7rem;padding:3px 10px">↻ Regenerar</button></div>'
-      +recs.map(function(r){return '<div class="rec-card '+(r.color||'amber')+'"><div class="rec-titulo">'+r.emoji+' '+r.titulo+'</div><div class="rec-body">'+r.texto+'</div></div>';}).join('')
-      +(recs.length===0?'<div style="color:#9ca3af;text-align:center;padding:1rem">Sin recomendaciones disponibles.</div>':'');
-  }catch(err){
-    cont.innerHTML='<div style="padding:1rem;text-align:center"><div style="color:#ef4444;margin-bottom:.8rem">No se pudo conectar con la IA.</div><button type="button" class="btn-save" id="btn-retry-rec">Reintentar</button></div>';
-  }
-}
 
 var TARJETA_PALETTE=['#1a1a2e','#6c63ff','#ef4444','#22c55e','#f59e0b','#3b82f6','#ec4899','#0e7490','#7c3aed','#f97316'];
 function openTarjetaModal(editId){
