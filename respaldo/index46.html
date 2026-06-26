@@ -239,7 +239,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <div style="font-size:.72rem;color:#9ca3af;margin-bottom:.6rem;text-align:left">Si tienes contraseña configurada, escríbela para entrar. Si no, deja el campo vacío y te enviamos un link.</div>
     <button type="button" class="btn" id="btn-email">Entrar con email</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.86</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.85</div>
   </div>
 </div>
 
@@ -351,7 +351,6 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
         <div class="section"><div class="section-hdr"><span class="section-title" id="g-label">Gastos</span></div>
           <div style="padding:.75rem 1rem;border-bottom:1px solid #f3f4f6"><button type="button" class="btn" style="background:#7c3aed;width:100%" id="btn-add-gasto">+ Agregar gasto</button></div>
           <div class="card" id="g-list"></div></div>
-        <div class="section" id="g-cats-section" style="display:none"><div class="section-hdr"><span class="section-title" id="g-cats-label">Resumen por categoría</span></div><div class="card" id="g-cats-resumen"></div></div>
         <div class="section" id="g-tarjetas-section" style="display:none"><div class="section-hdr"><span class="section-title">Resumen por tarjeta</span></div><div id="g-tarjetas-resumen" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px"></div></div>
       </div>
       <!-- Proyección hogar content -->
@@ -414,7 +413,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       </div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.86</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.85</span></footer>
 </div>
 
 <!-- MODAL GASTO -->
@@ -571,17 +570,6 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       <button type="button" class="btn-save" style="width:100%" id="btn-save-perfil">Guardar cambios</button>
       <button type="button" class="btn-save" style="width:100%;background:#1a1a2e" id="btn-change-password">🔑 Configurar contraseña</button>
       <button type="button" class="btn-cancel" style="width:100%;color:#ef4444;border-color:#ef4444" id="btn-logout">Cerrar sesión</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL DETALLE HOGAR (categoría o tarjeta) -->
-<div class="modal-bg" id="modal-g-detalle">
-  <div class="modal" style="max-width:440px;max-height:85vh;overflow-y:auto">
-    <div class="modal-title" id="g-det-title">Detalle</div>
-    <div id="g-det-body"></div>
-    <div class="modal-footer" style="border-top:1px solid #f3f4f6;padding-top:.8rem;margin-top:.5rem">
-      <button type="button" class="btn-cancel" onclick="closeModal('modal-g-detalle')">Cerrar</button>
     </div>
   </div>
 </div>
@@ -956,25 +944,6 @@ function renderGastos(mes){
   var gpn=el('g-next');if(gpn)gpn.addEventListener('click',function(){_gPage++;renderGastos(A.viewMes);});
   // Resumen por tarjeta: siempre sobre TODOS los gastos del mes, no solo la página visible
   var todosGdm=A.gastos.filter(function(g){return gastoEnMes(g,mes);});
-  // Resumen por categoría hogar
-  var catMapG={};todosGdm.forEach(function(x){
-    var cats=parseCats(x.categorias||'');
-    if(!cats.length){catMapG['Sin categoría']=(catMapG['Sin categoría']||0)+montoGastoEnMes(x,mes);return;}
-    cats.forEach(function(c){catMapG[c]=(catMapG[c]||0)+montoGastoEnMes(x,mes);});
-  });
-  var catSecG=el('g-cats-section');
-  var catKeys=Object.keys(catMapG);
-  catSecG.style.display=catKeys.length?'block':'none';
-  if(catKeys.length){
-    el('g-cats-label').textContent='Resumen por categoría · '+fmt(todosGdm.reduce(function(t,g){return t+montoGastoEnMes(g,mes);},0));
-    var chtml='<div style="padding:.5rem 1rem">';
-    catKeys.sort(function(a,b){return catMapG[b]-catMapG[a];}).forEach(function(c){
-      chtml+='<div style="display:flex;justify-content:space-between;align-items:center;font-size:.82rem;padding:6px 0;border-bottom:1px solid #f3f4f6;cursor:pointer" data-g-cat="'+encodeURIComponent(c)+'" class="g-det-row">'
-        +'<span>'+c+'</span><span style="font-weight:700;display:flex;align-items:center;gap:6px">'+fmt(catMapG[c])+' <span style="font-size:.65rem;color:#9ca3af">▶</span></span></div>';
-    });
-    el('g-cats-resumen').innerHTML=chtml+'</div>';
-  }
-  // Resumen por tarjeta
   var tarjMapTodo={};var tarjMapPag={};var tarjMapPend={};
   todosGdm.forEach(function(x){
     if(!x.tarjeta_id)return;
@@ -990,13 +959,13 @@ function renderGastos(mes){
     tarjKeys.forEach(function(tid){
       var t=A.tarjetas.find(function(x){return x.id===tid;});if(!t)return;
       var pag=tarjMapPag[tid]||0,pend=tarjMapPend[tid]||0,tot=tarjMapTodo[tid]||0;
-      rhtml+='<div class="tarjeta-panel-card" style="cursor:pointer" data-g-tarj="'+tid+'">'
+      rhtml+='<div class="tarjeta-panel-card">'
         +'<div class="tarjeta-panel-strip" style="background:'+t.color+'"></div>'
         +'<div class="tarjeta-panel-body"><div style="font-weight:800;font-size:.88rem">'+t.banco+'</div>'+(t.nombre?'<div style="font-size:.68rem;color:#9ca3af;margin-top:1px">'+t.nombre+'</div>':'')+'</div>'
         +'<div class="tarjeta-panel-monto">'+fmt(pag)+'</div>'
         +'<div style="padding:0 .9rem .7rem;font-size:.7rem;line-height:1.6">'
         +(pend>0?'<div style="color:#d97706">⏳ '+fmt(pend)+' pendiente</div>':'')
-        +'<div style="color:#9ca3af;font-size:.65rem">Total mes: '+fmt(tot)+' · <span style="color:#6c63ff">▶ ver detalle</span></div>'
+        +'<div style="color:#9ca3af;font-size:.65rem">Total mes: '+fmt(tot)+'</div>'
         +'</div>'
         +'</div>';
     });
@@ -1187,56 +1156,6 @@ document.addEventListener('click',function(e){
   A.categorias=cats;sb.from('hogares').update({categorias:JSON.stringify(cats)}).eq('id',A.hogar.id);
   renderSettingsCats();renderTagSel('mhm-cats-sel',selCatsGP);renderTagSel('mg-cats-sel',selCatsG);
 });
-// Detalle por categoría en Gestión Hogar
-document.addEventListener('click',function(e){
-  var row=e.target.closest('[data-g-cat]');if(!row)return;
-  var cat=decodeURIComponent(row.dataset.gCat);
-  var mes=A.viewMes;
-  var gastosMes=A.gastos.filter(function(g){return gastoEnMes(g,mes);});
-  var items=gastosMes.filter(function(g){
-    var cats=parseCats(g.categorias||'');
-    return cat==='Sin categoría'?!cats.length:cats.indexOf(cat)>=0;
-  });
-  items.sort(function(a,b){return montoGastoEnMes(b,mes)-montoGastoEnMes(a,mes);});
-  var total=items.reduce(function(t,g){return t+montoGastoEnMes(g,mes);},0);
-  el('g-det-title').textContent=cat+' · '+fmt(total);
-  el('g-det-body').innerHTML=items.length?items.map(function(g){
-    var pagado=esPagado(g,mes);
-    var tarj=g.tarjeta_id?A.tarjetas.find(function(t){return t.id===g.tarjeta_id;}):null;
-    var m=montoGastoEnMes(g,mes);
-    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f3f4f6;border-left:3px solid '+(pagado?'#22c55e':'#f59e0b')+';padding-left:8px">'
-      +'<div><div style="font-weight:700;font-size:.85rem">'+g.nombre+'</div>'
-      +'<div style="font-size:.7rem;color:#9ca3af">'+(pagado?'✓ pagado':'⏳ pendiente')+(tarj?' · 💳 '+tarj.banco:'')+(g.fijo?' · fijo':'')+'</div></div>'
-      +'<div style="font-weight:800;font-size:.88rem;color:#1a1a2e;white-space:nowrap">'+fmt(m)+'</div></div>';
-  }).join(''):'<div style="color:#9ca3af;font-size:.83rem;padding:.5rem 0">Sin gastos</div>';
-  el('modal-g-detalle').classList.add('open');
-});
-// Detalle por tarjeta en Gestión Hogar
-document.addEventListener('click',function(e){
-  var card=e.target.closest('[data-g-tarj]');if(!card)return;
-  var tid=card.dataset.gTarj;
-  var t=A.tarjetas.find(function(x){return x.id===tid;});if(!t)return;
-  var mes=A.viewMes;
-  var items=A.gastos.filter(function(g){return gastoEnMes(g,mes)&&g.tarjeta_id===tid;});
-  items.sort(function(a,b){return montoGastoEnMes(b,mes)-montoGastoEnMes(a,mes);});
-  var pag=items.filter(function(g){return esPagado(g,mes);}).reduce(function(s,g){return s+montoGastoEnMes(g,mes);},0);
-  var pend=items.filter(function(g){return !esPagado(g,mes);}).reduce(function(s,g){return s+montoGastoEnMes(g,mes);},0);
-  el('g-det-title').textContent='💳 '+t.banco+(t.nombre?' · '+t.nombre:'')+' · '+fmt(pag+pend);
-  var resumen='<div style="display:flex;gap:12px;margin-bottom:.8rem;padding:.6rem;background:#f9fafb;border-radius:10px;font-size:.78rem">'
-    +'<div><span style="color:#15803d;font-weight:700">✓ Pagado:</span> '+fmt(pag)+'</div>'
-    +(pend>0?'<div><span style="color:#d97706;font-weight:700">⏳ Pendiente:</span> '+fmt(pend)+'</div>':'')
-    +'</div>';
-  el('g-det-body').innerHTML=resumen+(items.length?items.map(function(g){
-    var pagado=esPagado(g,mes);var m=montoGastoEnMes(g,mes);
-    var cats=parseCats(g.categorias||'');
-    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f3f4f6;border-left:3px solid '+(pagado?'#22c55e':'#f59e0b')+';padding-left:8px">'
-      +'<div><div style="font-weight:700;font-size:.85rem">'+g.nombre+'</div>'
-      +'<div style="font-size:.7rem;color:#9ca3af">'+(pagado?'✓ pagado':'⏳ pendiente')+(cats.length?' · '+cats[0]:'')+(g.fijo?' · fijo':'')+'</div></div>'
-      +'<div style="font-weight:800;font-size:.88rem;color:#1a1a2e;white-space:nowrap">'+fmt(m)+'</div></div>';
-  }).join(''):'<div style="color:#9ca3af;font-size:.83rem;padding:.5rem 0">Sin gastos</div>');
-  el('modal-g-detalle').classList.add('open');
-});
-
 // Detalle por categoría en Gestión Personal
 document.addEventListener('click',function(e){
   var row=e.target.closest('[data-gp-cat]');if(!row)return;
