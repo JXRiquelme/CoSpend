@@ -44,8 +44,9 @@ header{background:linear-gradient(135deg,#6c63ff,#a78bfa);padding:1rem 1rem 0}
 .month-bar{background:rgba(255,255,255,.15);border-radius:12px 12px 0 0;padding:.5rem .9rem;display:flex;align-items:center;gap:6px}
 .mnav{border:none;background:rgba(255,255,255,.2);color:#fff;font-weight:700;font-size:.8rem;padding:4px 9px;border-radius:7px;cursor:pointer;font-family:inherit}
 .mnav.hoy{background:rgba(255,255,255,.9);color:#6c63ff}
-.month-select{flex:1;text-align:center;text-align-last:center;border:none;background:transparent;color:#fff;font-size:.95rem;font-weight:700;border-radius:7px;padding:6px 4px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none}
-.month-select option{background:#1a1a2e;text-align:left}
+.month-label{flex:1;text-align:center;font-weight:700;color:#fff;font-size:.9rem}
+.month-select{border:none;background:rgba(255,255,255,.2);color:#fff;font-size:.78rem;font-weight:700;border-radius:7px;padding:4px 7px;outline:none;cursor:pointer;max-width:130px}
+.month-select option{background:#1a1a2e}
 .tabs{background:#6c63ff;display:flex;position:sticky;top:0;z-index:50;overflow-x:auto}
 .tab{padding:.65rem .85rem;border:none;background:transparent;color:rgba(255,255,255,.6);font-weight:700;font-size:.8rem;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;font-family:inherit}
 .tab.active{color:#fff;border-bottom-color:#fff}
@@ -183,9 +184,8 @@ main{max-width:700px;margin:0 auto;padding:.9rem .9rem 5rem}
 .rec-card.purple{border-left-color:#7c3aed}
 .rec-titulo{font-weight:800;font-size:.9rem;margin-bottom:.4rem;display:flex;align-items:center;gap:7px}
 .rec-body{font-size:.82rem;color:#4b5563;line-height:1.55}
-.tab-pane{display:none}
-.tab-pane.active{display:block;animation:tabFadeIn .22s ease}
-@keyframes tabFadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.tab-pane{display:none;opacity:0;transition:opacity .18s ease}
+.tab-pane.active{display:block;opacity:1}
 .sub-tab{flex:1;background:#fff;border:2px solid #e5e7eb;border-radius:14px;padding:.65rem .5rem;cursor:pointer;text-align:center;transition:all .15s;font-family:inherit;color:#6b7280}
 .sub-tab.active{background:#6c63ff;border-color:#6c63ff;color:#fff}
 .sub-tab:hover:not(.active){border-color:#6c63ff;color:#6c63ff}
@@ -247,7 +247,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <div style="font-size:.72rem;color:#9ca3af;margin-bottom:.6rem;text-align:left">Si tienes contraseña configurada, escríbela para entrar. Si no, deja el campo vacío y te enviamos un link.</div>
     <button type="button" class="btn" id="btn-email">Entrar con email</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.89</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.88</div>
   </div>
 </div>
 
@@ -291,9 +291,10 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     </div>
     <div class="month-bar">
       <button type="button" class="mnav" id="btn-mes-prev">◀</button>
-      <select class="month-select" id="mes-select"></select>
+      <span class="month-label" id="mes-label">—</span>
       <button type="button" class="mnav" id="btn-mes-next">▶</button>
       <button type="button" class="mnav hoy" id="btn-mes-hoy">Hoy</button>
+      <select class="month-select" id="mes-select"></select>
     </div>
   </header>
   <div class="tabs">
@@ -432,7 +433,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       <div id="rec-content"></div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.89</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.88</span></footer>
 </div>
 
 <!-- MODAL GASTO -->
@@ -832,18 +833,12 @@ function totalReembsProyMes(mes){
   var directos=A.reembolsos.filter(function(r){return r.mes===mes&&r.recibido!==false;}).reduce(function(t,r){return t+r.monto;},0);
   // Solo proyectar en meses futuros al mes activo del usuario
   if(mes<=A.viewMes)return directos;
-  var fijos=A.reembolsos.filter(function(r){return r.fijo&&r.recibido!==false&&r.mes<mes;});
+  var fijos=A.reembolsos.filter(function(r){return r.fijo&&r.recibido!==false;});
   if(!fijos.length)return directos;
-  // Para cada "serie" de reembolso fijo (agrupado por gasto_id, o por concepto si no hay gasto_id),
-  // tomar la variación MÁS RECIENTE de esa serie específica (no un único mes global)
-  var series={};
-  fijos.forEach(function(r){
-    var key=r.gasto_id?('g:'+r.gasto_id):('c:'+r.concepto);
-    if(!series[key]||r.mes>series[key].mes)series[key]=r;
-  });
+  var mesesConFijos=[...new Set(fijos.map(function(r){return r.mes;}))].sort();
+  var ultimoMes=mesesConFijos[mesesConFijos.length-1];
   var totalFijos=0;
-  Object.keys(series).forEach(function(key){
-    var r=series[key];
+  fijos.filter(function(r){return r.mes===ultimoMes;}).forEach(function(r){
     if(r.gasto_id){
       var gasto=A.gastos.find(function(g){return g.id===r.gasto_id;});
       if(!gasto||!gastoEnMes(gasto,mes))return;
@@ -898,12 +893,23 @@ function setSubTab(btn,contentId,tabName){
   if(el('meta-ahorro-pers'))el('meta-ahorro-pers').value=A.metaAhorroPers||0;
 }
 function setTab(name){
-  document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===name);});
-  document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.toggle('active',p.id==='pane-'+name);});
-  if(name==='hogar'){['gastos-content','ahorro-hogar-content','proyeccion-content'].forEach(function(id){var e=el(id);if(e)e.style.display='none';});var btns=el('pane-hogar').querySelectorAll('.sub-tab');btns.forEach(function(b){b.classList.toggle('active',b.dataset.sub==='gastos');});el('gastos-content').style.display='block';}
-  if(name==='gestion-personal'){['saldo-content','ahorro-pers-content','proyeccion-pers-content'].forEach(function(id){var e=el(id);if(e)e.style.display='none';});var btns2=el('pane-gestion-personal').querySelectorAll('.sub-tab');btns2.forEach(function(b){b.classList.toggle('active',b.dataset.sub==='saldo');});el('saldo-content').style.display='block';renderProyeccionPersonal(A.viewMes);}
-  if(name==='ingresos')renderIngresos(A.viewMes);
-  if(name==='recomendaciones')renderRecBotones();
+  var prev=document.querySelector('.tab-pane.active');
+  if(prev){prev.style.opacity='0';setTimeout(function(){
+    document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===name);});
+    document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.toggle('active',p.id==='pane-'+name);});
+    if(name==='hogar'){['gastos-content','ahorro-hogar-content','proyeccion-content'].forEach(function(id){var e=el(id);if(e)e.style.display='none';});var btns=el('pane-hogar').querySelectorAll('.sub-tab');btns.forEach(function(b){b.classList.toggle('active',b.dataset.sub==='gastos');});el('gastos-content').style.display='block';}
+    if(name==='gestion-personal'){['saldo-content','ahorro-pers-content','proyeccion-pers-content'].forEach(function(id){var e=el(id);if(e)e.style.display='none';});var btns2=el('pane-gestion-personal').querySelectorAll('.sub-tab');btns2.forEach(function(b){b.classList.toggle('active',b.dataset.sub==='saldo');});el('saldo-content').style.display='block';renderProyeccionPersonal(A.viewMes);}
+    if(name==='ingresos')renderIngresos(A.viewMes);
+    if(name==='recomendaciones')renderRecBotones();
+    if(next){next.style.opacity='0';requestAnimationFrame(function(){requestAnimationFrame(function(){next.style.opacity='1';});});}
+  },120);}else{
+    document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===name);});
+    document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.toggle('active',p.id==='pane-'+name);});
+    if(name==='hogar'){['gastos-content','ahorro-hogar-content','proyeccion-content'].forEach(function(id){var e=el(id);if(e)e.style.display='none';});var btns=el('pane-hogar').querySelectorAll('.sub-tab');btns.forEach(function(b){b.classList.toggle('active',b.dataset.sub==='gastos');});el('gastos-content').style.display='block';}
+    if(name==='gestion-personal'){['saldo-content','ahorro-pers-content','proyeccion-pers-content'].forEach(function(id){var e=el(id);if(e)e.style.display='none';});var btns2=el('pane-gestion-personal').querySelectorAll('.sub-tab');btns2.forEach(function(b){b.classList.toggle('active',b.dataset.sub==='saldo');});el('saldo-content').style.display='block';renderProyeccionPersonal(A.viewMes);}
+    if(name==='ingresos')renderIngresos(A.viewMes);
+    if(name==='recomendaciones')renderRecBotones();
+  }
 }
 document.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){setTab(b.dataset.tab);});});
 document.querySelectorAll('.modal-bg').forEach(function(e){e.addEventListener('click',function(ev){if(ev.target===e)e.classList.remove('open');});});
@@ -914,6 +920,7 @@ function brow(label,val,color,bold){return '<div class="balance-row"><span style
 function render(){
   var mes=A.viewMes;
   buildMesSelect();
+  el('mes-label').textContent=mesLabel(mes);
   if(A.hogar){el('app-hogar-nombre').textContent=A.hogar.nombre;el('invite-code').textContent=A.hogar.codigo_invitacion||'——';}
   if(A.miembro)el('btn-user').textContent=A.miembro.nombre.charAt(0).toUpperCase();
   var ti=totalIngresosMes(mes),tg=totalGastosMes(mes),sobra=ti-tg,pct=ti>0?Math.round(tg/ti*100):0;
@@ -1347,10 +1354,9 @@ document.addEventListener('click',function(e){
     body+='</div>';
     // Reembolsos
     var reimbsMes=A.reembolsos.filter(function(r){return r.mes===mes;});
-    var fijosAll=A.reembolsos.filter(function(r){return r.fijo&&r.recibido!==false&&r.mes<mes;});
-    var seriesFijos={};
-    fijosAll.forEach(function(r){var key=r.gasto_id?('g:'+r.gasto_id):('c:'+r.concepto);if(!seriesFijos[key]||r.mes>seriesFijos[key].mes)seriesFijos[key]=r;});
-    var fijosProyect=mes>A.viewMes?Object.keys(seriesFijos).map(function(k){return seriesFijos[k];}).filter(function(r){if(r.gasto_id){var g=A.gastos.find(function(x){return x.id===r.gasto_id;});if(!g||!gastoEnMes(g,mes))return false;}return true;}):[];
+    var fijosAll=A.reembolsos.filter(function(r){return r.fijo;});
+    var ultimoMesFijo=fijosAll.length?fijosAll.map(function(r){return r.mes;}).sort().reverse()[0]:null;
+    var fijosProyect=(mes>A.viewMes&&ultimoMesFijo)?fijosAll.filter(function(r){if(r.mes!==ultimoMesFijo)return false;if(r.gasto_id){var g=A.gastos.find(function(x){return x.id===r.gasto_id;});if(!g||!gastoEnMes(g,mes))return false;}return true;}):[];
     if(reimbsMes.length||fijosProyect.length){
       body+='<div style="font-size:.68rem;font-weight:800;color:#9ca3af;letter-spacing:.05em;margin-bottom:.3rem">REEMBOLSOS</div>';
       body+='<div class="card" style="padding:.5rem .8rem;margin-bottom:.8rem">';
