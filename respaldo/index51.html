@@ -44,9 +44,7 @@ header{background:linear-gradient(135deg,#6c63ff,#a78bfa);padding:1rem 1rem 0}
 .month-bar{background:rgba(255,255,255,.15);border-radius:12px 12px 0 0;padding:.5rem .9rem;display:flex;align-items:center;gap:6px}
 .mnav{border:none;background:rgba(255,255,255,.2);color:#fff;font-weight:700;font-size:.8rem;padding:4px 9px;border-radius:7px;cursor:pointer;font-family:inherit}
 .mnav.hoy{background:rgba(255,255,255,.9);color:#6c63ff}
-.month-select{flex:1;max-width:220px;margin:0 auto;text-align:center;text-align-last:center;border:1.5px solid rgba(255,255,255,.35);background-color:rgba(255,255,255,.12);color:#fff;font-size:.92rem;font-weight:700;border-radius:10px;padding:8px 28px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;transition:background-color .15s,border-color .15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
-.month-select:hover{background-color:rgba(255,255,255,.2);border-color:rgba(255,255,255,.55)}
-.month-select:active{background-color:rgba(255,255,255,.28)}
+.month-select{flex:1;text-align:center;text-align-last:center;border:none;background:transparent;color:#fff;font-size:.95rem;font-weight:700;border-radius:7px;padding:6px 4px;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none}
 .month-select option{background:#1a1a2e;text-align:left}
 .tabs{background:#6c63ff;display:flex;position:sticky;top:0;z-index:50;overflow-x:auto}
 .tab{padding:.65rem .85rem;border:none;background:transparent;color:rgba(255,255,255,.6);font-weight:700;font-size:.8rem;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;font-family:inherit}
@@ -249,7 +247,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
     <div style="font-size:.72rem;color:#9ca3af;margin-bottom:.6rem;text-align:left">Si tienes contraseña configurada, escríbela para entrar. Si no, deja el campo vacío y te enviamos un link.</div>
     <button type="button" class="btn" id="btn-email">Entrar con email</button>
     <div id="auth-msg" style="font-size:.8rem;margin-top:.4rem"></div>
-    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.90</div>
+    <div style="margin-top:1.2rem;font-size:.7rem;color:#d1d5db">alpha-0.89</div>
   </div>
 </div>
 
@@ -434,7 +432,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:#9ca3af;font-size:.72rem}
       <div id="rec-content"></div>
     </div>
   </main>
-  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.90</span></footer>
+  <footer>CoSpend · 🔒 Datos cifrados en Supabase &nbsp;·&nbsp; <span style="opacity:.45">alpha-0.89</span></footer>
 </div>
 
 <!-- MODAL GASTO -->
@@ -834,9 +832,7 @@ function totalReembsProyMes(mes){
   var directos=A.reembolsos.filter(function(r){return r.mes===mes&&r.recibido!==false;}).reduce(function(t,r){return t+r.monto;},0);
   // Solo proyectar en meses futuros al mes activo del usuario
   if(mes<=A.viewMes)return directos;
-  // Los reembolsos FIJOS se proyectan independientemente de si ya fueron "recibidos" en su mes de origen,
-  // porque cada mes futuro es una nueva ocurrencia que aún no se ha cobrado
-  var fijos=A.reembolsos.filter(function(r){return r.fijo&&r.mes<mes;});
+  var fijos=A.reembolsos.filter(function(r){return r.fijo&&r.recibido!==false&&r.mes<mes;});
   if(!fijos.length)return directos;
   // Para cada "serie" de reembolso fijo (agrupado por gasto_id, o por concepto si no hay gasto_id),
   // tomar la variación MÁS RECIENTE de esa serie específica (no un único mes global)
@@ -1351,7 +1347,7 @@ document.addEventListener('click',function(e){
     body+='</div>';
     // Reembolsos
     var reimbsMes=A.reembolsos.filter(function(r){return r.mes===mes;});
-    var fijosAll=A.reembolsos.filter(function(r){return r.fijo&&r.mes<mes;});
+    var fijosAll=A.reembolsos.filter(function(r){return r.fijo&&r.recibido!==false&&r.mes<mes;});
     var seriesFijos={};
     fijosAll.forEach(function(r){var key=r.gasto_id?('g:'+r.gasto_id):('c:'+r.concepto);if(!seriesFijos[key]||r.mes>seriesFijos[key].mes)seriesFijos[key]=r;});
     var fijosProyect=mes>A.viewMes?Object.keys(seriesFijos).map(function(k){return seriesFijos[k];}).filter(function(r){if(r.gasto_id){var g=A.gastos.find(function(x){return x.id===r.gasto_id;});if(!g||!gastoEnMes(g,mes))return false;}return true;}):[];
