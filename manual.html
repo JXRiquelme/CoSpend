@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoSpend · Manual de uso</title>
+<style>
+  :root {
+    --purple: #6c63ff;
+    --purple-dark: #5a52d5;
+    --purple-light: #f5f3ff;
+    --purple-mid: #ede9fe;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --green: #22c55e;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --teal: #0e7490;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f8f7ff;
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    background: linear-gradient(135deg, #6c63ff, #a78bfa);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 20px rgba(108,99,255,.3);
+  }
+  nav .logo { font-size: 1.1rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+  nav .subtitle { font-size: .78rem; color: rgba(255,255,255,.75); margin-left: auto; }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    background: rgba(255,255,255,.25);
+    height: 3px;
+    position: sticky;
+    top: 56px;
+    z-index: 99;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #fff;
+    transition: width .4s ease;
+    width: 0%;
+  }
+
+  /* SIDEBAR INDEX */
+  .layout { display: flex; max-width: 1100px; margin: 0 auto; gap: 0; }
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    padding: 2rem 1rem 2rem 1.5rem;
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+  .sidebar-title { font-size: .65rem; font-weight: 800; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: .75rem; }
+  .sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .78rem;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 6px 8px;
+    border-radius: 8px;
+    margin-bottom: 2px;
+    transition: all .15s;
+    border-left: 2px solid transparent;
+  }
+  .sidebar a:hover, .sidebar a.active {
+    background: var(--purple-light);
+    color: var(--purple);
+    border-left-color: var(--purple);
+  }
+  .sidebar a .idx { font-size: .65rem; font-weight: 800; color: var(--purple); min-width: 16px; }
+
+  /* CONTENT */
+  .content { flex: 1; padding: 2rem 2rem 4rem; min-width: 0; }
+
+  /* SECTION */
+  .section {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(108,99,255,.07);
+    margin-bottom: 2rem;
+    overflow: hidden;
+    scroll-margin-top: 80px;
+  }
+  .section-header {
+    padding: 1.5rem 1.75rem 1rem;
+    border-bottom: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-num {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--purple), #a78bfa);
+    color: #fff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: .85rem;
+    flex-shrink: 0;
+  }
+  .section-title { font-size: 1.05rem; font-weight: 800; }
+  .section-tag {
+    margin-left: auto;
+    font-size: .65rem;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+    background: var(--purple-mid);
+    color: var(--purple);
+  }
+  .section-body { padding: 1.5rem 1.75rem; }
+
+  /* INTRO HERO */
+  .hero {
+    background: linear-gradient(135deg, #6c63ff, #a78bfa 60%, #c4b5fd);
+    border-radius: 18px;
+    padding: 2.5rem 2rem;
+    color: #fff;
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .hero h1 { font-size: 1.6rem; font-weight: 800; line-height: 1.25; }
+  .hero p { font-size: .88rem; opacity: .88; line-height: 1.6; max-width: 480px; }
+  .hero-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: .5rem; }
+  .hero-chip {
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.3);
+    color: #fff;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: .72rem;
+    font-weight: 600;
+  }
+
+  /* STEPS */
+  .steps { display: flex; flex-direction: column; gap: 1.25rem; }
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--purple-light);
+    border: 2px solid var(--purple);
+    color: var(--purple);
+    font-weight: 800;
+    font-size: .78rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-content { flex: 1; }
+  .step-title { font-weight: 700; font-size: .9rem; margin-bottom: .25rem; }
+  .step-desc { font-size: .82rem; color: var(--muted); line-height: 1.55; }
+
+  /* MOCKUP */
+  .mockup-wrap {
+    background: var(--purple-light);
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin: 1.25rem 0;
+  }
+  .mockup-label {
+    font-size: .65rem;
+    font-weight: 800;
+    color: var(--purple);
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    margin-bottom: .75rem;
+  }
+
+  /* CALLOUT */
+  .callout {
+    border-radius: 12px;
+    padding: .9rem 1.1rem;
+    font-size: .82rem;
+    line-height: 1.55;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 1rem 0;
+  }
+  .callout.tip { background: #f0fdf4; border-left: 3px solid var(--green); color: #166534; }
+  .callout.warn { background: #fffbeb; border-left: 3px solid var(--amber); color: #92400e; }
+  .callout.info { background: var(--purple-light); border-left: 3px solid var(--purple); color: #4c1d95; }
+  .callout-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+  /* PILL BADGE */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 700;
+  }
+  .badge.green { background: #dcfce7; color: #166534; }
+  .badge.amber { background: #fef3c7; color: #92400e; }
+  .badge.purple { background: var(--purple-mid); color: #5b21b6; }
+  .badge.blue { background: #dbeafe; color: #1e40af; }
+
+  /* INLINE CODE */
+  kbd {
+    background: #f3f4f6;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: .75rem;
+    font-family: monospace;
+    color: var(--text);
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .card-mini {
+    background: var(--purple-light);
+    border-radius: 12px;
+    padding: .9rem 1rem;
+  }
+  .card-mini .card-mini-title { font-weight: 700; font-size: .82rem; margin-bottom: .3rem; display: flex; align-items: center; gap: 6px; }
+  .card-mini .card-mini-desc { font-size: .75rem; color: var(--muted); line-height: 1.5; }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  th { text-align: left; padding: 8px 12px; font-size: .7rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 2px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
+
+  /* FLOW DIAGRAM */
+  .flow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 1rem 0; }
+  .flow-step {
+    background: var(--purple);
+    color: #fff;
+    border-radius: 10px;
+    padding: 7px 13px;
+    font-size: .78rem;
+    font-weight: 700;
+  }
+  .flow-arrow { color: var(--muted); font-size: 1rem; }
+  .flow-step.light { background: var(--purple-light); color: var(--purple); }
+
+  /* RESPONSIVE */
+  @media (max-width: 680px) {
+    .sidebar { display: none; }
+    .content { padding: 1rem; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .section-body { padding: 1.25rem; }
+    .hero { padding: 1.5rem; }
+    .hero h1 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <img src="data:image/jpeg;base64,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" alt="CoSpend" style="width:32px;height:32px;border-radius:8px;object-fit:cover">
+    CoSpend
+  </div>
+  <span class="subtitle">Guía de inicio rápido</span>
+</nav>
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Contenido</div>
+    <a href="#intro"><span class="idx">·</span> ¿Qué es CoSpend?</a>
+    <a href="#antes"><span class="idx">0</span> Antes de usar</a>
+    <a href="#s1"><span class="idx">1</span> Ingresos</a>
+    <a href="#s2"><span class="idx">2</span> Gestión Hogar</a>
+    <a href="#s3"><span class="idx">3</span> Gestión Personal</a>
+    <a href="#s4"><span class="idx">4</span> Resumen</a>
+    <a href="#s5"><span class="idx">5</span> Flujo mensual</a>
+    <a href="#s6"><span class="idx">6</span> Tips y funciones extra</a>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="content">
+
+    <!-- HERO -->
+    <div class="hero" id="intro">
+      <img src="data:image/jpeg;base64,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" alt="CoSpend" style="width:52px;height:52px;border-radius:12px;object-fit:cover;margin-bottom:.25rem">
+      <h1>CoSpend<br>Guía de inicio rápido</h1>
+      <p>Todo lo que necesitas saber para controlar tus finanzas del hogar y personales desde el primer día.</p>
+      <div class="hero-chips">
+        <span class="hero-chip">⏱ 5 min de lectura</span>
+        <span class="hero-chip">🏠 Gastos del hogar</span>
+        <span class="hero-chip">👤 Gastos personales</span>
+        <span class="hero-chip">📊 Proyección a 12 meses</span>
+      </div>
+    </div>
+
+    <!-- QUÉ ES -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-num">?</div>
+        <div class="section-title">¿Qué es CoSpend?</div>
+      </div>
+      <div class="section-body">
+        <p style="font-size:.87rem;color:var(--muted);line-height:1.6;margin-bottom:1rem">CoSpend es una app de control financiero diseñada para hogares. Separa los gastos compartidos de los personales y te muestra en todo momento cuánto te queda disponible.</p>
+        <div class="grid-3">
+          <div class="card-mini">
+            <div class="card-mini-title">🏠 Hogar</div>
+            <div class="card-mini-desc">Gastos compartidos: arriendo, cuentas, deudas. Todos los ven.</div>
+          </div>
+          <div class="card-mini">
+            <div class="card-mini-title">👤 Personal</div>
+            <div class="card-mini-desc">Tus gastos propios: comida, salud, ocio. Solo tú los ves.</div>
+          </div>
+          <div class="card-mini">
+            <div class="card-mini-title">📊 Proyección</div>
+            <div class="card-mini-desc">Ve cuánto gastarás los próximos 12 meses según tus gastos fijos.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANTES DE USAR -->
+    <div class="section" id="antes">
+      <div class="section-header">
+        <div class="section-num">0</div>
+        <div class="section-title">Antes de usar — Configuración esencial</div>
+        <span class="section-tag">⚠️ Importante</span>
+      </div>
+      <div class="section-body">
+        <p style="font-size:.87rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem">Antes de registrar cualquier gasto, configura estos tres puntos. Determinan cómo funciona el sistema.</p>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">0</div>
+            <div class="step-content">
+              <div class="step-title">Configura tu contraseña (recomendado si entraste con Google)</div>
+              <div class="step-desc">Si usas Google para iniciar sesión, te recomendamos también configurar una contraseña como respaldo. Ve a <kbd>⚙️ Mi perfil</kbd> (botón J arriba a la derecha) → <kbd>🔑 Configurar contraseña</kbd>. Así podrás entrar con email + contraseña sin depender de Google.</div>
+              <div class="callout tip" style="margin-top:.7rem">
+                <span class="callout-icon">🔑</span>
+                <span>Mínimo 6 caracteres. Una vez configurada, en el login escribe tu email, ingresa la contraseña y listo — sin link al correo ni Google.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-dot">1</div>
+            <div class="step-content">
+              <div class="step-title">Configura el cambio de mes</div>
+              <div class="step-desc">Ve al ícono de ajustes (⚙️ arriba a la derecha) → <kbd>Mi perfil</kbd> → sección <kbd>Cambio de mes</kbd>. Elige cuándo el sistema avanzará al nuevo mes de trabajo:</div>
+              <div style="margin-top:.8rem">
+                <table>
+                  <tr><th>Opción</th><th>Descripción</th><th>Recomendado si…</th></tr>
+                  <tr>
+                    <td><span class="badge purple">📆 Día 1 del mes</span></td>
+                    <td>Cambia el 1° de cada mes</td>
+                    <td>Tu sueldo llega a principios de mes</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge blue">📅 Día 5 del mes</span></td>
+                    <td>Cambia el día 5 de cada mes. Los gastos de días 1–4 se asignan al mes anterior.</td>
+                    <td>Tu sueldo llega el día 5 ✓</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge amber">💸 Penúltimo día hábil</span></td>
+                    <td>Cambia 2 días hábiles antes de fin de mes. Considera feriados chilenos.</td>
+                    <td>Tu sueldo llega a fin de mes ✓</td>
+                  </tr>
+                  <tr>
+                    <td><span class="badge green">📌 Manual</span></td>
+                    <td>Tú decides cuándo cambiar usando el selector de mes</td>
+                    <td>Quieres control total</td>
+                  </tr>
+                </table>
+              </div>
+              <div class="callout tip" style="margin-top:.9rem">
+                <span class="callout-icon">💡</span>
+                <span>Con <strong>Penúltimo día hábil</strong>, el sistema cambia automáticamente y te avisa con un mensaje al entrar ese día. Los feriados chilenos están incluidos en el cálculo.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-dot">2</div>
+            <div class="step-content">
+              <div class="step-title">Agrega tus tarjetas</div>
+              <div class="step-desc">En <kbd>⚙️ Mi perfil</kbd> → <kbd>Mis tarjetas</kbd> → <kbd>+ Agregar tarjeta</kbd>. Agrega cada tarjeta de débito y crédito que uses para pagar. Esto permite ver el total gastado por tarjeta al final del mes.</div>
+              <div class="callout info" style="margin-top:.75rem">
+                <span class="callout-icon">💳</span>
+                <span>Ejemplo: <strong>Scotiabank Platinum</strong> (crédito), <strong>Banco de Chile Débito</strong>, <strong>Líder</strong> (crédito).</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-dot">3</div>
+            <div class="step-content">
+              <div class="step-title">Crea tus categorías</div>
+              <div class="step-desc">En <kbd>⚙️ Mi perfil</kbd> → <kbd>Categorías</kbd>. Agrega las categorías que usarás para clasificar tus gastos personales. Puedes agregar un emoji al inicio para identificarlas fácil.</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:.75rem">
+                <span class="badge purple">🍕 Comida</span>
+                <span class="badge purple">🏥 Salud</span>
+                <span class="badge purple">🐱 Mascotas</span>
+                <span class="badge purple">🎬 Ocio</span>
+                <span class="badge purple">🛒 Supermercado</span>
+                <span class="badge purple">🚗 Transporte</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S1: INGRESOS -->
+    <div class="section" id="s1">
+      <div class="section-header">
+        <div class="section-num">1</div>
+        <div class="section-title">💵 Pestaña Ingresos</div>
+        <span class="section-tag">Al inicio de cada mes</span>
+      </div>
+      <div class="section-body">
+        <p style="font-size:.87rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem">Aquí registras todo el dinero que entra ese mes. Es lo primero que debes hacer al cambiar de mes.</p>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">1</div>
+            <div class="step-content">
+              <div class="step-title">Actualiza tu sueldo</div>
+              <div class="step-desc">Si cambió respecto al mes anterior, modifica el número y presiona <kbd>Guardar</kbd>. Si es el mismo, no necesitas hacer nada.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">2</div>
+            <div class="step-content">
+              <div class="step-title">Agrega otros ingresos (si aplica)</div>
+              <div class="step-desc">Usa <kbd>+ Agregar</kbd> en <strong>Otros ingresos</strong> para registrar bonos, horas extra, saldo del mes anterior, etc. Elige si va al <strong>flujo del hogar</strong> (suma a los ingresos compartidos) o es <strong>solo para ti</strong>.</div>
+              <div class="mockup-wrap">
+                <div class="mockup-label">Ejemplo de otros ingresos</div>
+                <svg viewBox="0 0 420 90" xmlns="http://www.w3.org/2000/svg" style="width:100%;border-radius:10px">
+                  <rect width="420" height="90" fill="white" rx="10"/>
+                  <rect x="12" y="12" width="32" height="32" rx="8" fill="#dcfce7"/>
+                  <text x="28" y="33" text-anchor="middle" font-size="14">💰</text>
+                  <text x="54" y="27" font-family="-apple-system,sans-serif" font-size="12" font-weight="700" fill="#1a1a2e">Horas extras</text>
+                  <text x="54" y="41" font-family="-apple-system,sans-serif" font-size="10" fill="#6b7280">Flujo hogar</text>
+                  <text x="390" y="31" text-anchor="end" font-family="-apple-system,sans-serif" font-size="13" font-weight="800" fill="#15803d">$74.091</text>
+                  <rect x="12" y="54" width="32" height="32" rx="8" fill="#dcfce7"/>
+                  <text x="28" y="75" text-anchor="middle" font-size="14">💰</text>
+                  <text x="54" y="69" font-family="-apple-system,sans-serif" font-size="12" font-weight="700" fill="#1a1a2e">Saldo mes anterior</text>
+                  <text x="54" y="83" font-family="-apple-system,sans-serif" font-size="10" fill="#6b7280">Flujo hogar</text>
+                  <text x="390" y="73" text-anchor="end" font-family="-apple-system,sans-serif" font-size="13" font-weight="800" fill="#15803d">$35.010</text>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">3</div>
+            <div class="step-content">
+              <div class="step-title">Registra reembolsos que esperas recibir</div>
+              <div class="step-desc">En <strong>Reembolsos</strong> → <kbd>+ Agregar</kbd>. Si alguien te debe dinero, agrégalo aquí. Puedes dejarlo como <strong>borrador</strong> (no se suma al ingreso) y marcarlo como <span class="badge green">✓ recibido</span> cuando llegue el dinero. Si es recurrente, activa <kbd>📌 Reembolso fijo</kbd> para que se proyecte automáticamente cada mes.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S2: GESTIÓN HOGAR -->
+    <div class="section" id="s2">
+      <div class="section-header">
+        <div class="section-num">2</div>
+        <div class="section-title">🏠 Pestaña Gestión Hogar</div>
+        <span class="section-tag">Durante el mes</span>
+      </div>
+      <div class="section-body">
+        <p style="font-size:.87rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem">Aquí van todos los gastos compartidos del hogar: arriendo, cuentas de servicios, cuotas de créditos, suscripciones, etc.</p>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">1</div>
+            <div class="step-content">
+              <div class="step-title">Agrega un gasto</div>
+              <div class="step-desc">Presiona <kbd>+ Agregar gasto</kbd> y completa:</div>
+              <div style="margin-top:.75rem;display:grid;grid-template-columns:1fr 1fr;gap:.6rem">
+                <div class="callout info" style="margin:0">
+                  <span>📝 <strong>Nombre</strong> del gasto</span>
+                </div>
+                <div class="callout info" style="margin:0">
+                  <span>💰 <strong>Monto</strong> en pesos</span>
+                </div>
+                <div class="callout info" style="margin:0">
+                  <span>🔁 Si es <strong>fijo</strong> (repite cada mes)</span>
+                </div>
+                <div class="callout info" style="margin:0">
+                  <span>📅 Si tiene <strong>cuotas</strong> (ej: 12/24)</span>
+                </div>
+                <div class="callout info" style="margin:0">
+                  <span>💳 <strong>Tarjeta</strong> con la que pagas</span>
+                </div>
+                <div class="callout info" style="margin:0">
+                  <span>👤 <strong>Quién</strong> lo paga</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-dot">2</div>
+            <div class="step-content">
+              <div class="step-title">Marca como pagado cuando lo pagues</div>
+              <div class="step-desc">Usa el botón <kbd>✓</kbd> de cada fila. La fila cambiará de <span class="badge amber">⏳ pendiente</span> a <span class="badge green">✓ pagado</span>. El header se actualiza en tiempo real mostrando cuánto llevas pagado y cuánto te queda disponible.</div>
+            </div>
+          </div>
+
+          <div class="step">
+            <div class="step-dot">3</div>
+            <div class="step-content">
+              <div class="step-title">Registra variaciones de montos</div>
+              <div class="step-desc">Si un gasto fijo cambió de monto este mes (ej: la cuenta del gas subió), usa el botón <kbd>⚡</kbd>. Así el monto base no cambia pero se registra el monto real del mes, y la proyección lo usa para los meses siguientes.</div>
+              <div class="callout warn">
+                <span class="callout-icon">⚡</span>
+                <span>Ejemplo: el gas tiene monto base de $25.256 pero este mes fue $26.100. Registra la variación y el sistema mostrará $26.100 en el total del mes.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESUMEN TARJETAS VISUAL -->
+        <div class="mockup-wrap" style="margin-top:1.5rem">
+          <div class="mockup-label">Resumen por tarjeta — lo que verás al final</div>
+          <svg viewBox="0 0 420 80" xmlns="http://www.w3.org/2000/svg" style="width:100%">
+            <!-- Card 1 -->
+            <rect x="0" y="0" width="130" height="75" rx="12" fill="white"/>
+            <rect x="0" y="0" width="130" height="6" rx="12" fill="#2563eb"/>
+            <text x="12" y="28" font-family="-apple-system,sans-serif" font-size="11" font-weight="800" fill="#1a1a2e">Banco de Chile</text>
+            <text x="12" y="42" font-family="-apple-system,sans-serif" font-size="9" fill="#6b7280">Platinum</text>
+            <text x="12" y="60" font-family="-apple-system,sans-serif" font-size="14" font-weight="800" fill="#1a1a2e">$28.929</text>
+            <!-- Card 2 -->
+            <rect x="140" y="0" width="130" height="75" rx="12" fill="white"/>
+            <rect x="140" y="0" width="130" height="6" rx="12" fill="#ef4444"/>
+            <text x="152" y="28" font-family="-apple-system,sans-serif" font-size="11" font-weight="800" fill="#1a1a2e">Scotiabank</text>
+            <text x="152" y="42" font-family="-apple-system,sans-serif" font-size="9" fill="#6b7280">Platinum</text>
+            <text x="152" y="60" font-family="-apple-system,sans-serif" font-size="14" font-weight="800" fill="#1a1a2e">$247.453</text>
+            <!-- Card 3 -->
+            <rect x="280" y="0" width="130" height="75" rx="12" fill="white"/>
+            <rect x="280" y="0" width="130" height="6" rx="12" fill="#0e7490"/>
+            <text x="292" y="28" font-family="-apple-system,sans-serif" font-size="11" font-weight="800" fill="#1a1a2e">Líder</text>
+            <text x="292" y="42" font-family="-apple-system,sans-serif" font-size="9" fill="#6b7280">Crédito</text>
+            <text x="292" y="60" font-family="-apple-system,sans-serif" font-size="14" font-weight="800" fill="#1a1a2e">$40.813</text>
+          </svg>
+          <p style="font-size:.72rem;color:var(--muted);margin-top:.5rem">El número grande es lo pagado. Tócalo para ver el detalle de cada gasto de esa tarjeta.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- S3: GESTIÓN PERSONAL -->
+    <div class="section" id="s3">
+      <div class="section-header">
+        <div class="section-num">3</div>
+        <div class="section-title">💰 Pestaña Gestión Personal</div>
+        <span class="section-tag">Solo tú lo ves</span>
+      </div>
+      <div class="section-body">
+        <p style="font-size:.87rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem">Tus gastos privados. Solo los ves tú. El saldo personal se calcula descontando del ingreso proporcional del hogar lo que ya gastaste a nivel personal.</p>
+
+        <div class="callout info">
+          <span class="callout-icon">🔒</span>
+          <span>El <strong>saldo personal</strong> = tu parte proporcional de lo que sobra del hogar − tus gastos personales. Si hay reembolsos pendientes de recibir, también los verás sumados aparte.</span>
+        </div>
+
+        <div class="steps" style="margin-top:1.25rem">
+          <div class="step">
+            <div class="step-dot">1</div>
+            <div class="step-content">
+              <div class="step-title">Registra tus gastos personales</div>
+              <div class="step-desc">Presiona <kbd>+ Registrar gasto personal</kbd>. Completa descripción, monto, categoría, fecha y tarjeta usada. El saldo disponible se descuenta automáticamente.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">2</div>
+            <div class="step-content">
+              <div class="step-title">Revisa el resumen por categorías</div>
+              <div class="step-desc">Toca cualquier categoría del resumen para ver el detalle de cada gasto. Sirve para identificar en qué estás gastando más.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">3</div>
+            <div class="step-content">
+              <div class="step-title">Revisa la proyección personal</div>
+              <div class="step-desc">En la sub-pestaña <kbd>Proyección</kbd> verás mes a mes cuánto te quedará según tus gastos fijos del hogar. Útil para planificar compras grandes.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S4: RESUMEN -->
+    <div class="section" id="s4">
+      <div class="section-header">
+        <div class="section-num">4</div>
+        <div class="section-title">📊 Pestaña Resumen</div>
+      </div>
+      <div class="section-body">
+        <p style="font-size:.87rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem">Vista general del mes: métricas, distribución, balance y gráficos históricos.</p>
+        <div class="grid-2">
+          <div class="card-mini">
+            <div class="card-mini-title">📈 Métricas</div>
+            <div class="card-mini-desc">Ingresos, gastos, disponible y % del ingreso usado. Actualización instantánea.</div>
+          </div>
+          <div class="card-mini">
+            <div class="card-mini-title">⚖️ Distribución</div>
+            <div class="card-mini-desc">Qué porcentaje del gasto le corresponde a cada miembro según su sueldo.</div>
+          </div>
+          <div class="card-mini">
+            <div class="card-mini-title">🏷️ Por categorías</div>
+            <div class="card-mini-desc">Total combinado de hogar + personal por categoría. Toca para ver el desglose.</div>
+          </div>
+          <div class="card-mini">
+            <div class="card-mini-title">📉 Gráficos</div>
+            <div class="card-mini-desc">Evolución mes a mes de ingresos, gastos, deudas o cualquier categoría. Filtra por año y mes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S5: FLUJO MENSUAL -->
+    <div class="section" id="s5">
+      <div class="section-header">
+        <div class="section-num">5</div>
+        <div class="section-title">🔄 Flujo mensual recomendado</div>
+        <span class="section-tag">Resumen práctico</span>
+      </div>
+      <div class="section-body">
+        <p style="font-size:.87rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem">Sigue este orden cada vez que empiece un nuevo mes de trabajo:</p>
+
+        <div class="flow">
+          <div class="flow-step">1. Actualizar sueldo</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">2. Agregar otros ingresos</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">3. Revisar gastos fijos</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">4. Pagar y marcar ✓</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step">5. Registrar gastos personales</div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-step light">Ver resumen</div>
+        </div>
+
+        <div class="callout tip" style="margin-top:1.25rem">
+          <span class="callout-icon">💡</span>
+          <span><strong>Al final del mes:</strong> anota cuánto te sobró en "Saldo personal" y el mes siguiente agrégalo como <em>Otro ingreso → Saldo mes anterior → Flujo hogar</em>.</span>
+        </div>
+
+        <table style="margin-top:1.25rem">
+          <tr><th>Momento</th><th>Acción</th><th>Dónde</th></tr>
+          <tr><td>Inicio de mes</td><td>Registrar sueldo y otros ingresos</td><td>💵 Ingresos</td></tr>
+          <tr><td>Al pagar una cuenta</td><td>Marcar gasto como pagado ✓</td><td>🏠 Gestión Hogar</td></tr>
+          <tr><td>Al hacer un gasto personal</td><td>Registrar gasto personal</td><td>💰 Gestión Personal</td></tr>
+          <tr><td>Si cambia el monto de un fijo</td><td>Registrar variación ⚡</td><td>🏠 Gestión Hogar</td></tr>
+          <tr><td>Al recibir un reembolso</td><td>Marcarlo como recibido ✓</td><td>💵 Ingresos → Reembolsos</td></tr>
+          <tr><td>Fin de mes</td><td>Revisar saldo y anotar sobrante</td><td>📊 Resumen</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- S6: TIPS -->
+    <div class="section" id="s6">
+      <div class="section-header">
+        <div class="section-num">6</div>
+        <div class="section-title">✨ Tips y funciones extra</div>
+      </div>
+      <div class="section-body">
+        <div class="steps">
+          <div class="step">
+            <div class="step-dot">💳</div>
+            <div class="step-content">
+              <div class="step-title">Conciliar con tu cartola</div>
+              <div class="step-desc">El resumen por tarjeta muestra el total pagado (número grande) y lo pendiente (amarillo). Compara el número grande con el "Monto total a pagar" de tu estado de cuenta para verificar que cuadra.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">📅</div>
+            <div class="step-content">
+              <div class="step-title">Navegar entre meses</div>
+              <div class="step-desc">Usa las flechas ◀ ▶ o haz clic en el nombre del mes (selector desplegable) para revisar meses anteriores. El botón <kbd>Hoy</kbd> te devuelve al mes actual.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">📌</div>
+            <div class="step-content">
+              <div class="step-title">Reembolsos fijos</div>
+              <div class="step-desc">Si alguien siempre te reembolsa parte de un gasto (ej: un familiar que comparte Directv), márcalo como <kbd>📌 Reembolso fijo</kbd> al crearlo. El sistema lo sumará automáticamente en todos los meses futuros de la proyección.</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">✨</div>
+            <div class="step-content">
+              <div class="step-title">Consejos con IA</div>
+              <div class="step-desc">La pestaña <kbd>✨ Consejos</kbd> analiza tus gastos del mes y te da recomendaciones personalizadas. Puedes pedir un análisis completo o enfocarte en una categoría específica como "Comida" o "Padres".</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">🔑</div>
+            <div class="step-content">
+              <div class="step-title">Acceso sin depender de Google</div>
+              <div class="step-desc">En <kbd>⚙️ Mi perfil</kbd> → <kbd>🔑 Configurar contraseña</kbd>. Así puedes entrar con tu email + contraseña sin necesitar Google ni el link al correo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:2rem 0;color:var(--muted);font-size:.78rem">
+      CoSpend · Guía de inicio rápido · Actualizado julio 2026
+    </div>
+
+  </main>
+</div>
+
+<script>
+  // Progress bar
+  window.addEventListener('scroll', function() {
+    var docH = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = docH > 0 ? (window.scrollY / docH * 100) : 0;
+    document.getElementById('progress').style.width = pct + '%';
+  });
+
+  // Active sidebar link
+  var sections = document.querySelectorAll('.section[id], .hero[id]');
+  var links = document.querySelectorAll('.sidebar a');
+  window.addEventListener('scroll', function() {
+    var current = '';
+    sections.forEach(function(s) {
+      if (window.scrollY >= s.offsetTop - 100) current = s.id;
+    });
+    links.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  });
+
+  // Smooth scroll
+  links.forEach(function(a) {
+    a.addEventListener('click', function(e) {
+      e.preventDefault();
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>
